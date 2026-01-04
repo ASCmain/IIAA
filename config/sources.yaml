@@ -1,0 +1,10 @@
+# config/sources.yaml
+# Definire fonti e regole di acquisizione.
+#
+# sources:
+#   - source_id: eurlex
+#     issuer: EUR-Lex
+#     authority_tier: 1
+#     license_class: L0
+#     urls:
+#       - https://...

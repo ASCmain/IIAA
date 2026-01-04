@@ -1,0 +1,23 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv*/
+.ipynb_checkpoints/
+
+# Data & runtime artifacts (NOT versioned)
+data/raw/
+data/processed/
+data/eval/runs/
+qdrant_data/
+debug_dump/
+logs/
+*.log
+
+# OS
+.DS_Store
