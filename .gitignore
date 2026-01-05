@@ -22,3 +22,7 @@ logs/
 # OS
 .DS_Store
 runs/
+
+# Corpus (non versionare originali/artefatti)
+corpus/original/
+corpus/processed/
