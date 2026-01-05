@@ -1,0 +1,3 @@
+python-dotenv>=1.0
+requests>=2.32
+qdrant-client>=1.10
