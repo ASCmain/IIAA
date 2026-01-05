@@ -4,3 +4,6 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 
 ## [Unreleased]
 - Initial scaffolding.
+
+## [Unreleased]
+- docs: aggiunta Model Policy e ruoli modello in .env.example (M1 freeze, local-only).
