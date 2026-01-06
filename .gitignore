@@ -26,11 +26,3 @@ runs/
 # Corpus (non versionare originali/artefatti)
 corpus/original/
 corpus/processed/
-
-# Corpus originals: default ignore
-/corpus/original/**
-
-# Allow versioning only for MVP public official sources
-!/corpus/original/mvp_public/
-/corpus/original/mvp_public/**
-!/corpus/original/mvp_public/**
