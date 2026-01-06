@@ -26,3 +26,9 @@ runs/
 # Corpus (non versionare originali/artefatti)
 corpus/original/
 corpus/processed/
+
+# Telemetry (track docs/schemas, ignore generated outputs)
+telemetry/**/run_*.json
+telemetry/**/events_*.jsonl
+telemetry/system/powermetrics_*.txt
+telemetry/system/*.log
