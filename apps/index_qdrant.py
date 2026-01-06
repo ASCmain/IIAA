@@ -4,24 +4,62 @@ import argparse
 import json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Distance, VectorParams
+from qdrant_client.http.models import Distance, VectorParams, PointStruct
 
 
-def ollama_embed(base_url: str, model: str, text: str) -> list[float]:
-    r = requests.post(
-        f"{base_url}/api/embeddings",
-        json={"model": model, "prompt": text},
-        timeout=120,
-    )
-    r.raise_for_status()
-    data = r.json()
-    return data["embedding"]
+def utc_now_z() -> str:
+    # ISO8601 in UTC with Z suffix, seconds precision
+    return datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def ollama_embed(base_url: str, model: str, text: str, max_chars: int = 1200) -> list[float]:
+    """Call Ollama embeddings with defensive truncation.
+
+    Some embedding models enforce a context window. We truncate by characters and
+    retry with progressive shrinking if Ollama returns a context-length error.
+    """
+    if text is None:
+        text = ""
+
+    # Remove NULs (can break downstream tools / payloads)
+    text = text.replace("\x00", " ")
+
+    prompt = text[:max_chars]
+
+    last_body = ""
+    for _ in range(8):
+        r = requests.post(
+            f"{base_url}/api/embeddings",
+            json={"model": model, "prompt": prompt},
+            timeout=120,
+        )
+
+        if r.status_code < 400:
+            data = r.json()
+            return data["embedding"]
+
+        try:
+            last_body = (r.text or "")[:400]
+        except Exception:
+            last_body = ""
+
+        # Known Ollama error for embedding context overflow
+        if "exceeds the context length" in last_body.lower():
+            if len(prompt) <= 200:
+                break
+            prompt = prompt[: max(200, int(len(prompt) * 0.60))]
+            continue
+
+        # Other errors: raise
+        r.raise_for_status()
+
+    raise RuntimeError(f"ollama embeddings failed (context overflow): {last_body}")
 
 
 def stable_point_id(doc_id: str, page: int, chunk_sha256: str) -> str:
@@ -42,14 +80,16 @@ def ensure_collection(client: QdrantClient, name: str, vector_size: int, recreat
         )
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--chunks", required=True, help="Path to chunks_*.jsonl")
     ap.add_argument("--collection", default="", help="Override QDRANT_COLLECTION from .env")
     ap.add_argument("--recreate", action="store_true")
     ap.add_argument("--limit", type=int, default=0, help="Index only first N chunks (0 = all)")
     ap.add_argument("--batch", type=int, default=64)
-    ap.add_argument("--out-manifest", default="")
+    ap.add_argument("--max-chars", type=int, default=1200, help="Max chars per chunk sent to embedding model")
+    ap.add_argument("--out-manifest", dest="out_manifest", default="", help="Path for index manifest json")
+    ap.add_argument("--out-errors", dest="out_errors", default="", help="Path for per-chunk indexing errors jsonl")
     args = ap.parse_args()
 
     load_dotenv(dotenv_path=Path(".env"))
@@ -65,57 +105,83 @@ def main():
     if not chunks_path.exists():
         raise SystemExit(f"Missing chunks file: {chunks_path}")
 
-    # Detect vector size from one embedding call
-    probe = ollama_embed(ollama_base, embed_model, "vector_size_probe")
+    started = utc_now_z()
+
+    # Determine output paths early (so we can log errors even if indexing fails mid-way)
+    default_dir = Path("data/processed/ingestion")
+    default_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    out_manifest = (args.out_manifest or "").strip() or str(default_dir / f"index_manifest_{stamp}.json")
+    out_errors = (args.out_errors or "").strip() or str(default_dir / f"index_errors_{stamp}.jsonl")
+
+    out_manifest_path = Path(out_manifest).resolve()
+    out_manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    out_errors_path = Path(out_errors).resolve()
+    out_errors_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Detect vector size from one embedding call (short prompt)
+    probe = ollama_embed(ollama_base, embed_model, "vector_size_probe", max_chars=64)
     ensure_collection(client, collection, vector_size=len(probe), recreate=args.recreate)
 
     total = 0
     upserted = 0
-    started = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    skipped = 0
 
-    ids: list[str] = []
-    vecs: list[list[float]] = []
-    payloads: list[dict] = []
+    points: list[PointStruct] = []
 
-    def flush():
-        nonlocal upserted, ids, vecs, payloads
-        if not ids:
+    def flush() -> None:
+        nonlocal upserted, points
+        if not points:
             return
-        client.upsert(collection_name=collection, points=list(zip(ids, vecs, payloads)))
-        upserted += len(ids)
-        ids, vecs, payloads = [], [], []
+        client.upsert(collection_name=collection, points=points)
+        upserted += len(points)
+        points = []
 
-    with chunks_path.open("r", encoding="utf-8") as f:
-        for line in f:
-            if args.limit and total >= args.limit:
-                break
-            line = line.strip()
-            if not line:
-                continue
-            obj = json.loads(line)
-            total += 1
+    with out_errors_path.open("w", encoding="utf-8") as err_fp:
+        with chunks_path.open("r", encoding="utf-8") as f:
+            for line in f:
+                if args.limit and total >= args.limit:
+                    break
+                line = line.strip()
+                if not line:
+                    continue
 
-            doc_id = obj.get("doc_id", "")
-            page = int(obj.get("page", 0))
-            chunk_sha256 = obj.get("chunk_sha256", "")
+                obj = json.loads(line)
+                total += 1
 
-            pid = stable_point_id(doc_id, page, chunk_sha256)
-            text = obj["text"]
-            vec = ollama_embed(ollama_base, embed_model, text)
+                doc_id = obj.get("doc_id", "")
+                page = int(obj.get("page", 0))
+                chunk_sha256 = obj.get("chunk_sha256", "")
 
-            # Keep full text in payload for grounding
-            payload = obj
+                pid = stable_point_id(doc_id, page, chunk_sha256)
+                text = obj.get("text", "")
 
-            ids.append(pid)
-            vecs.append(vec)
-            payloads.append(payload)
+                try:
+                    vec = ollama_embed(ollama_base, embed_model, text, max_chars=args.max_chars)
+                except Exception as e:
+                    skipped += 1
+                    err = {
+                        "doc_id": doc_id,
+                        "page": page,
+                        "chunk_sha256": chunk_sha256,
+                        "text_len": len(text or ""),
+                        "error": str(e),
+                    }
+                    err_fp.write(json.dumps(err, ensure_ascii=False) + "\n")
+                    continue
 
-            if len(ids) >= args.batch:
-                flush()
+                # Keep full text in payload for grounding
+                payload = obj
 
-    flush()
+                points.append(PointStruct(id=pid, vector=vec, payload=payload))
 
-    ended = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+                if len(points) >= args.batch:
+                    flush()
+
+        flush()
+
+    ended = utc_now_z()
     manifest = {
         "started_utc": started,
         "ended_utc": ended,
@@ -125,16 +191,15 @@ def main():
         "chunks_file": str(chunks_path),
         "total_read": total,
         "total_upserted": upserted,
+        "total_skipped": skipped,
         "batch": args.batch,
+        "max_chars": args.max_chars,
         "recreate": bool(args.recreate),
+        "errors_file": str(out_errors_path),
+        "manifest_file": str(out_manifest_path),
     }
 
-    out_manifest = args.out-manifest if hasattr(args, "out-manifest") else args.out_manifest
-    out_manifest = (out_manifest or "").strip() or f"data/processed/ingestion/index_manifest_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    out_path = Path(out_manifest).resolve()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-
+    out_manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(manifest, indent=2, ensure_ascii=False))
 
 
