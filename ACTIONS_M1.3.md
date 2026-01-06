@@ -2,27 +2,30 @@
 Data: 2026-01-06
 Branch: feat/m1.3-deterministic-ingestion
 
-## Comandi eseguiti
-- source .venv/bin/activate
-- python -m pip install pypdf python-docx beautifulsoup4 lxml
-- (fix) apps/ingest_deterministic.py: sys.path repo root
-- (fix) corpus/catalog/catalog.json normalizzato in formato root+items
-- python apps/ingest_deterministic.py --catalog corpus/catalog/catalog.json --out-dir data/processed/ingestion --dry-run
-- python apps/ingest_deterministic.py --catalog corpus/catalog/catalog.json --out-dir data/processed/ingestion
-
-## Risultati dry-run (manifest)
-- total_items: 10
+## Run (dry-run)
+- run_id: 20260106_030702
 - indexed_items: 4
 - skipped_items: 6
 - total_chunks: 3037
 - total_chars: 4081959
 - warnings: 0
 
-## Output prodotti (non versionati, in gitignore)
-- data/processed/ingestion/manifest_<run_id>.json
-- data/processed/ingestion/chunks_<run_id>.jsonl
-- data/processed/ingestion/errors_<run_id>.jsonl (se presente)
-- data/processed/ingestion/fingerprint_<run_id>.json
+## Run (full)
+- run_id: 20260106_030806
+- chunks_path: data/processed/ingestion/chunks_20260106_030806.jsonl (~6.8 MB)
+- manifest_path: data/processed/ingestion/manifest_20260106_030806.json
+- fingerprint_path: data/processed/ingestion/fingerprint_20260106_030806.json
+- indexed_items: 4
+- skipped_items: 6
+- total_chunks: 3037
+- total_chars: 4081959
+- warnings: 0
 
-## Note / anomalie
-- Nessuna anomalia sul parsing PDF (warnings=0).
+## Comandi eseguiti (estratto)
+- source .venv/bin/activate
+- python -m pip install pypdf python-docx beautifulsoup4 lxml
+- python apps/ingest_deterministic.py --catalog corpus/catalog/catalog.json --out-dir data/processed/ingestion --dry-run
+- python apps/ingest_deterministic.py --catalog corpus/catalog/catalog.json --out-dir data/processed/ingestion
+
+## Output prodotti
+- data/processed/ingestion/* (derivati, non versionati; tracciati tramite manifest+fingerprint)
