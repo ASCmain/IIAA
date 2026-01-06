@@ -2,6 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+
+# Ensure repo root is on sys.path when running as a script (python apps/...)
+import sys
+from pathlib import Path as _Path
+sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
 from datetime import datetime
 from pathlib import Path
 
