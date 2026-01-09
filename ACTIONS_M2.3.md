@@ -85,3 +85,5 @@ J) Telemetria (ultimo run):
 - spans=[read_and_hash, extract_blocks, build_rows, write_jsonl]
 - path: `telemetry/normalize_eurlex_html/run_*.json`
 
+
+Nota: questo file contiene un primo recap M2.3 e un’integrazione successiva più completa (QC monoblocco + root cause/fix). La seconda sezione prevale come riferimento operativo.
