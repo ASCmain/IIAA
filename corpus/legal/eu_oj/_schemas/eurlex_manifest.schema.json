@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EUR-Lex Download Manifest Row",
+  "type": "object",
+  "required": ["doc_id","celex","language","format","source_url","accessed_at_utc","sha256","bytes","license_notice_url"],
+  "properties": {
+    "doc_id": {"type":"string"},
+    "celex": {"type":"string"},
+    "language": {"type":"string"},
+    "format": {"type":"string","enum":["html","pdf"]},
+    "source_url": {"type":"string"},
+    "saved_path": {"type":"string"},
+    "accessed_at_utc": {"type":"string"},
+    "http_status": {"type":"integer"},
+    "bytes": {"type":"integer"},
+    "sha256": {"type":"string"},
+    "title": {"type":["string","null"]},
+    "publication_date": {"type":["string","null"]},
+    "is_consolidated": {"type":["boolean","null"]},
+    "consolidation_date": {"type":["string","null"]},
+    "available_languages_hint": {"type":["array","null"], "items":{"type":"string"}},
+    "license_notice_url": {"type":"string"},
+    "redistribution_allowed": {"type":["boolean","null"]},
+    "notes": {"type":["string","null"]}
+  }
+}
+
