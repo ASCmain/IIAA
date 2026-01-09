@@ -87,3 +87,5 @@ J) Telemetria (ultimo run):
 
 
 Nota: questo file contiene un primo recap M2.3 e un’integrazione successiva più completa (QC monoblocco + root cause/fix). La seconda sezione prevale come riferimento operativo.
+
+Nota di consolidamento: M2.3 è stato documentato in due passaggi (recap iniziale + integrazione completa con QC monoblocco, root cause e fix heading via classi EUR-Lex). Fare riferimento alla sezione “M2.3 — Normalizzazione EUR-Lex oracle HTML → blocks JSONL (EN/IT)” come sintesi definitiva.
