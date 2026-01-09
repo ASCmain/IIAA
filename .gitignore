@@ -27,8 +27,22 @@ runs/
 corpus/original/
 corpus/processed/
 
+# EU OJ downloads (regenerable; keep manifests + schemas versioned)
+corpus/legal/eu_oj/original/**
+corpus/legal/eu_oj/oracle_html/**
+!corpus/legal/eu_oj/original/.gitkeep
+!corpus/legal/eu_oj/oracle_html/.gitkeep
+!corpus/legal/eu_oj/manifests/**
+!corpus/legal/eu_oj/_schemas/**
+
+
 # Telemetry (track docs/schemas, ignore generated outputs)
 telemetry/**/run_*.json
 telemetry/**/events_*.jsonl
 telemetry/system/powermetrics_*.txt
 telemetry/system/*.log
+
+# Backup artifacts
+*.bak
+*.bak_*
+*.BAD_*.py
