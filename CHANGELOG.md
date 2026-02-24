@@ -10,3 +10,6 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 
 ## [Unreleased]
 - corpus: aggiunta struttura corpus e catalogo bibliografico APA-ready (catalog.json + schema) con tool di add/validate.
+
+## Unreleased
+- Fix: add missing dependency  required by telemetry logging.
