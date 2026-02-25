@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any, Dict
 
@@ -22,7 +22,7 @@ from src.telemetry import TelemetryRecorder
 
 
 def _now_tag() -> str:
-    return datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    return datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
 
 def _safe_int(v: Any, default: int) -> int:
@@ -70,8 +70,8 @@ def main() -> None:
     embed_model = os.getenv("OLLAMA_EMBED_MODEL", "mxbai-embed-large")
     chat_model = os.getenv("OLLAMA_CHAT_MODEL", "")
 
-    default_top_k = _safe_int(os.getenv("TOP_K", "6"), 6)
-    default_threshold = _safe_float(os.getenv("SCORE_THRESHOLD", "0.0"), 0.0)
+    default_top_k = _safe_int(os.getenv("RETRIEVAL_TOP_K", os.getenv("TOP_K", "6")), 6)
+    default_threshold = _safe_float(os.getenv("RETRIEVAL_SCORE_THRESHOLD", os.getenv("SCORE_THRESHOLD", "0.0")), 0.0)
 
     debug_dump_dir = Path(os.getenv("DEBUG_DUMP_DIR", "debug_dump"))
 
@@ -178,7 +178,7 @@ def main() -> None:
                         payload = {"result": payload}
 
                     payload["_ui_meta"] = {
-                        "ts_utc": datetime.utcnow().isoformat() + "Z",
+                        "ts_utc": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                         "qdrant_url": qdrant_url,
                         "collection": collection,
                         "ollama_base_url": ollama_base_url,
@@ -195,12 +195,50 @@ def main() -> None:
 
                     dump_path = _write_debug_dump(debug_dump_dir, payload)
 
+                    # --- Deterministic abstain gate (professional rigor)
+                    best_score = 0.0
+                    try:
+                        best_score = max((e.get("score") or 0.0) for e in evidences) if evidences else 0.0
+                    except Exception:
+                        best_score = 0.0
+
+                    decision = "answered"
+                    reason = None
+                    if float(score_threshold) > 0 and (not evidences or best_score < float(score_threshold)):
+                        decision = "abstained"
+                        reason = "insufficient_evidence_after_threshold"
+                        answer = (
+                            "Non posso rispondere con rigore: non ho evidenze sufficienti nel corpus indicizzato "
+                            f"(score_threshold={float(score_threshold):.2f}, top_k={int(top_k)}). "
+                            "Suggerimento: indicizza lo standard pertinente o fornisci input/dati aggiuntivi."
+                        )
+                        citations = []
+
+                    compact_hits = [
+                        {
+                            "chunk_id": e.get("chunk_id"),
+                            "score": e.get("score"),
+                            "doc_id": (e.get("meta") or {}).get("doc_id"),
+                            "page": (e.get("meta") or {}).get("page"),
+                            "source_path": (e.get("meta") or {}).get("source_path"),
+                        }
+                        for e in (evidences or [])[: int(top_k)]
+                    ]
+
                     telemetry_path = tm.finalize(
                         outputs={
                             "has_answer": bool(answer),
                             "citations_count": len(citations) if isinstance(citations, list) else None,
                             "evidences_count": len(evidences) if isinstance(evidences, list) else None,
-                        }
+                        },
+                        extra={
+                            "top_k": int(top_k),
+                            "score_threshold": float(score_threshold),
+                            "best_score": float(best_score),
+                            "decision": decision,
+                            "reason": reason,
+                            "retrieval": compact_hits,
+                        },
                     )
 
                     # Read summary back from telemetry JSON (quick UX)
