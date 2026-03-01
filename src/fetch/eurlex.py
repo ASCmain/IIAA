@@ -4,7 +4,7 @@ import hashlib
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import requests
 
@@ -16,6 +16,9 @@ class FetchResult:
     sha256: str
     saved_path: str
     bytes: int
+
+
+ProgressCB = Callable[[str, dict], None]
 
 
 def _sha256_bytes(b: bytes) -> str:
@@ -47,16 +50,16 @@ def fetch_html(
     out_path: str,
     user_agent: Optional[str] = None,
     timeout_s: int = 50,
-    retries: int = 8,
+    retries: int = 10,
     backoff_s: float = 2.0,
     min_bytes: int = 2000,
+    progress: Optional[ProgressCB] = None,
 ) -> FetchResult:
     """
     Robust downloader for EUR-Lex HTML (and some PDFs).
-    Rules:
-    - Success only if HTTP 200 and body >= min_bytes
-    - Treat 202 as transient (EUR-Lex sometimes returns Accepted/processing)
-    - Retry on 202/429/5xx with backoff and optional Retry-After
+    Success only if HTTP 200 and body >= min_bytes.
+    Treat 202 as transient (EUR-Lex sometimes returns Accepted/processing).
+    Retry on 202/429/5xx with backoff and optional Retry-After.
     """
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8",
@@ -72,15 +75,20 @@ def fetch_html(
     last_err: Exception | None = None
 
     for attempt in range(1, retries + 1):
+        if progress:
+            progress("attempt", {"attempt": attempt, "retries": retries})
+
         try:
             r = session.get(url, headers=headers, timeout=timeout_s, allow_redirects=True)
             status = r.status_code
 
-            # transient statuses
             if status in (202, 429, 502, 503, 504):
                 ra = _retry_after_seconds(r.headers)
                 sleep_s = ra if ra > 0 else backoff_s * attempt
-                time.sleep(min(sleep_s, 30.0))
+                sleep_s = min(sleep_s, 30.0)
+                if progress:
+                    progress("retry", {"status": status, "attempt": attempt, "sleep_s": sleep_s})
+                time.sleep(sleep_s)
                 raise RuntimeError(f"transient_http_{status}")
 
             if status != 200:
@@ -95,6 +103,9 @@ def fetch_html(
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_bytes(content)
 
+            if progress:
+                progress("success", {"status": status, "bytes": len(content)})
+
             return FetchResult(
                 url=url,
                 status_code=status,
@@ -103,6 +114,9 @@ def fetch_html(
                 bytes=len(content),
             )
 
+        except KeyboardInterrupt:
+            # propagate immediately
+            raise
         except Exception as e:
             last_err = e
             if attempt < retries:
