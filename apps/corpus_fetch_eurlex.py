@@ -42,12 +42,19 @@ def _git_commit() -> Optional[str]:
     return None
 
 
+def write_manifest(out_dir: Path, ts: str, fetched: list, failed: list, suffix: str = "") -> Path:
+    name = f"manifest.{ts}{suffix}.json"
+    p = out_dir / name
+    p.write_text(json.dumps({"downloaded_at_utc": ts, "fetched": fetched, "failed": failed}, indent=2), encoding="utf-8")
+    return p
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--sources", required=True, help="Path to EURLEX_SOURCES_*.json")
     p.add_argument("--out", required=True, help="Directory for raw HTML dumps (debug_dump/eurlex_raw)")
     p.add_argument("--user-agent", default="IIAA/0.2 (html-first; eur-lex fetch)")
-    p.add_argument("--sleep", type=float, default=1.0, help="Seconds to sleep between requests")
+    p.add_argument("--sleep", type=float, default=1.0, help="Seconds to sleep between documents")
     args = p.parse_args()
 
     step = "m2_fetch_eurlex_html"
@@ -67,59 +74,84 @@ def main() -> int:
 
     fetched: List[Dict[str, Any]] = []
     failed: List[Dict[str, Any]] = []
+
     ok = 0
     ko = 0
 
-    with rec.span("fetch_all", count=total):
-        for i, s in enumerate(sources, start=1):
-            url = s.get("source_uri", "")
-            doc_id = s.get("doc_id", "unknown")
+    try:
+        with rec.span("fetch_all", count=total):
+            for i, s in enumerate(sources, start=1):
+                url = s.get("source_uri", "")
+                doc_id = s.get("doc_id", "unknown")
+                prefix = f"[{i:02d}/{total:02d}]"
 
-            prefix = f"[{i:02d}/{total:02d}]"
-            if not url:
-                ko += 1
-                failed.append({"doc_id": doc_id, "reason": "missing source_uri"})
-                rec.event("fetch_skipped", doc_id=doc_id, reason="missing_source_uri")
-                print(f"{prefix} {doc_id}  SKIP (missing url)  ok={ok} fail={ko}")
+                if not url:
+                    ko += 1
+                    failed.append({"doc_id": doc_id, "reason": "missing source_uri"})
+                    rec.event("fetch_skipped", doc_id=doc_id, reason="missing_source_uri")
+                    print(f"{prefix} {doc_id}  SKIP (missing url)  ok={ok} fail={ko}")
+                    time.sleep(args.sleep)
+                    continue
+
+                fname = safe_name(f"{doc_id}.{ts}.html")
+                out_path = out_dir / fname
+
+                print(f"{prefix} {doc_id}  START")
+
+                # progress callback for per-attempt / retry visibility
+                def progress(kind: str, info: dict) -> None:
+                    if kind == "attempt":
+                        a = info.get("attempt")
+                        r = info.get("retries")
+                        print(f"{prefix} {doc_id}  attempt {a}/{r}")
+                    elif kind == "retry":
+                        st = info.get("status")
+                        sl = info.get("sleep_s")
+                        a = info.get("attempt")
+                        print(f"{prefix} {doc_id}  transient {st} -> retry in {sl:.1f}s (attempt {a})")
+                    elif kind == "success":
+                        st = info.get("status")
+                        b = info.get("bytes", 0)
+                        print(f"{prefix} {doc_id}  OK {st}  {b/1024.0:,.1f} KB")
+
+                try:
+                    r = fetch_html(
+                        url=url,
+                        out_path=str(out_path),
+                        user_agent=args.user_agent,
+                        progress=progress,
+                    )
+                    ok += 1
+                    fetched.append(
+                        {
+                            "doc_id": doc_id,
+                            "url": url,
+                            "status_code": r.status_code,
+                            "sha256": r.sha256,
+                            "bytes": r.bytes,
+                            "saved_path": r.saved_path,
+                            "downloaded_at_utc": ts,
+                        }
+                    )
+                    rec.event("fetched_one", doc_id=doc_id, status_code=r.status_code, bytes=r.bytes)
+                except Exception as e:
+                    ko += 1
+                    failed.append({"doc_id": doc_id, "url": url, "error": str(e)})
+                    rec.event("fetch_failed", doc_id=doc_id, error=str(e))
+                    print(f"{prefix} {doc_id}  FAIL  {e}  ok={ok} fail={ko}")
+
                 time.sleep(args.sleep)
-                continue
 
-            fname = safe_name(f"{doc_id}.{ts}.html")
-            out_path = out_dir / fname
+    except KeyboardInterrupt:
+        # graceful stop: write partial manifest + finalize telemetry
+        mp = write_manifest(out_dir, ts, fetched, failed, suffix=".partial")
+        rec.event("interrupted", ok=ok, fail=ko, manifest=str(mp))
+        rec.finalize(outputs={"fetched": len(fetched), "failed": len(failed), "manifest": str(mp)}, git_commit=_git_commit())
+        print(f"\nINTERRUPTED. Partial manifest written: {mp}")
+        return 130
 
-            try:
-                r = fetch_html(url=url, out_path=str(out_path), user_agent=args.user_agent)
-                ok += 1
-                fetched.append(
-                    {
-                        "doc_id": doc_id,
-                        "url": url,
-                        "status_code": r.status_code,
-                        "sha256": r.sha256,
-                        "bytes": r.bytes,
-                        "saved_path": r.saved_path,
-                        "downloaded_at_utc": ts,
-                    }
-                )
-                rec.event("fetched_one", doc_id=doc_id, status_code=r.status_code, bytes=r.bytes)
-                kb = r.bytes / 1024.0
-                print(f"{prefix} {doc_id}  OK {r.status_code}  {kb:,.1f} KB  ok={ok} fail={ko}")
-            except Exception as e:
-                ko += 1
-                failed.append({"doc_id": doc_id, "url": url, "error": str(e)})
-                rec.event("fetch_failed", doc_id=doc_id, error=str(e))
-                print(f"{prefix} {doc_id}  FAIL  {e}  ok={ok} fail={ko}")
-
-            time.sleep(args.sleep)
-
-    manifest = {"downloaded_at_utc": ts, "fetched": fetched, "failed": failed}
-    (out_dir / f"manifest.{ts}.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-
-    rec.finalize(
-        outputs={"fetched": len(fetched), "failed": len(failed), "manifest": str(out_dir / f"manifest.{ts}.json")},
-        git_commit=_git_commit(),
-    )
-
+    mp = write_manifest(out_dir, ts, fetched, failed)
+    rec.finalize(outputs={"fetched": len(fetched), "failed": len(failed), "manifest": str(mp)}, git_commit=_git_commit())
     return 0 if not failed else 2
 
 
