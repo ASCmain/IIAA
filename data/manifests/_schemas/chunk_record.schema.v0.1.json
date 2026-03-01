@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IIAA Chunk Record v0.1",
+  "type": "object",
+  "required": [
+    "chunk_id",
+    "document_id",
+    "language",
+    "text",
+    "text_len",
+    "standard_id",
+    "section_path",
+    "paragraph_key",
+    "chunk_seq",
+    "cite_key",
+    "is_deleted",
+    "is_withdrawal_section",
+    "markers",
+    "pdf_page_start",
+    "pdf_page_end"
+  ],
+  "properties": {
+    "chunk_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "document_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "IT",
+        "EN",
+        "--"
+      ]
+    },
+    "text": {
+      "type": "string"
+    },
+    "text_len": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "standard_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "section_path": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "paragraph_key": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "chunk_seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cite_key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "is_deleted": {
+      "type": "boolean"
+    },
+    "is_withdrawal_section": {
+      "type": "boolean"
+    },
+    "markers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pdf_page_start": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "pdf_page_end": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  },
+  "additionalProperties": true
+}

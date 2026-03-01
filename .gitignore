@@ -42,6 +42,12 @@ telemetry/**/events_*.jsonl
 telemetry/system/powermetrics_*.txt
 telemetry/system/*.log
 
+
+# Manifest runtime (generated)
+data/manifests/document_manifest.jsonl
+data/manifests/document_manifest.*.jsonl
+
+
 # Backup artifacts
 *.bak
 *.bak_*
