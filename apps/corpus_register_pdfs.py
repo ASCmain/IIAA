@@ -63,10 +63,6 @@ def guess_doc_type(name: str) -> str:
 
 
 def two_col_heuristic(pdf: pdfplumber.PDF, max_pages: int = 3) -> bool:
-    """
-    Cheap heuristic: if extracted text lines are very short on average and
-    there are many line breaks, it often indicates multi-column or table-like layout.
-    """
     lens: List[int] = []
     lines: List[int] = []
     n = min(len(pdf.pages), max_pages)
@@ -113,7 +109,6 @@ def main() -> int:
     items: List[Dict] = []
     with rec.span("scan", n_files=len(pdfs)):
         for p in pdfs:
-            # IMPORTANT: do not use meta key "name" (collides with span(name=...))
             with rec.span("file", file_name=p.name):
                 doc_id = guess_doc_id(p)
                 lang = guess_language(p.name)
@@ -139,7 +134,7 @@ def main() -> int:
                         "sha256": h,
                         "bytes": size_bytes,
                         "pages": pages,
-                        "language": lang,
+                        "language": lang,  # may be None (e.g., EFRAG)
                         "doc_type": doc_type,
                         "layout_hint": "two_col" if two_col else "one_col",
                         "registered_at_utc": utc_now_z(),
@@ -158,8 +153,9 @@ def main() -> int:
 
     print(f"Wrote manifest: {outp} (items={len(items)})")
     for it in items:
+        lang_print = it.get("language") or "--"
         print(
-            f"- {it['doc_id']:<22} {it.get('language','--'):<2} pages={it['pages']:<4} "
+            f"- {it['doc_id']:<22} {lang_print:<2} pages={it['pages']:<4} "
             f"layout={it['layout_hint']:<7} {it['bytes']/1024:>8.1f} KB  {it['filename']}"
         )
     return 0
