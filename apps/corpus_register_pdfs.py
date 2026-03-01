@@ -48,7 +48,6 @@ def guess_doc_id(path: Path) -> str:
     m = RX_OJ.search(name)
     if m:
         return m.group(1)
-    # fallback stable id
     return path.stem.replace(" ", "_")
 
 
@@ -84,7 +83,6 @@ def two_col_heuristic(pdf: pdfplumber.PDF, max_pages: int = 3) -> bool:
         return False
     avg_len = sum(lens) / len(lens)
     avg_lines = (sum(lines) / len(lines)) if lines else 0.0
-    # conservative thresholds
     return (avg_len < 45 and avg_lines > 35)
 
 
@@ -115,7 +113,8 @@ def main() -> int:
     items: List[Dict] = []
     with rec.span("scan", n_files=len(pdfs)):
         for p in pdfs:
-            with rec.span("file", name=p.name):
+            # IMPORTANT: do not use meta key "name" (collides with span(name=...))
+            with rec.span("file", file_name=p.name):
                 doc_id = guess_doc_id(p)
                 lang = guess_language(p.name)
                 doc_type = guess_doc_type(p.name)
@@ -126,7 +125,6 @@ def main() -> int:
                 try:
                     with pdfplumber.open(str(p)) as pdf:
                         pages = len(pdf.pages)
-                        # only care for potential two-col on 1606/2002 family; still compute for all
                         two_col = two_col_heuristic(pdf)
                 except Exception as e:
                     pages = -1
@@ -158,10 +156,12 @@ def main() -> int:
 
     rec.finalize(outputs={"manifest": str(outp), "count": len(items)})
 
-    # console summary (top-level)
     print(f"Wrote manifest: {outp} (items={len(items)})")
     for it in items:
-        print(f"- {it['doc_id']:<22} {it.get('language','--'):<2} pages={it['pages']:<4} layout={it['layout_hint']:<7} {it['bytes']/1024:>8.1f} KB  {it['filename']}")
+        print(
+            f"- {it['doc_id']:<22} {it.get('language','--'):<2} pages={it['pages']:<4} "
+            f"layout={it['layout_hint']:<7} {it['bytes']/1024:>8.1f} KB  {it['filename']}"
+        )
     return 0
 
 
