@@ -46,3 +46,7 @@ telemetry/system/*.log
 *.bak
 *.bak_*
 *.BAD_*.py
+
+# python cache
+__pycache__/
+*.pyc
