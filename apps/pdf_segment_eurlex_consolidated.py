@@ -20,32 +20,26 @@ from src.telemetry import TelemetryRecorder
 from src.text_normalize import normalize_text
 
 
-# strong headings (single-line)
-RX_IAS_EN = re.compile(r"^INTERNATIONAL\s+ACCOUNTING\s+STANDARD\s+(\d+)\b", re.I)
-RX_IFRS_EN = re.compile(r"^INTERNATIONAL\s+FINANCIAL\s+REPORTING\s+STANDARD\s+(\d+)\b", re.I)
-
-RX_IAS_IT_LONG = re.compile(r"^PRINCIPIO\s+CONTABILE\s+INTERNAZIONALE\s+IAS\s+(\d+)\b", re.I)
-RX_IAS_IT_ALT = re.compile(r"^PRINCIPIO\s+CONTABILE\s+INTERNAZIONALE\s+(\d+)\b", re.I)
-
-RX_IFRIC_EN = re.compile(r"^IFRIC\s+(\d+)\b", re.I)
-RX_SIC_EN = re.compile(r"^SIC\s+(\d+)\b", re.I)
-RX_IFRIC_IT = re.compile(r"^INTERPRETAZIONE\s+IFRIC\s+(\d+)\b", re.I)
-RX_SIC_IT = re.compile(r"^INTERPRETAZIONE\s+SIC\s+(\d+)\b", re.I)
-
-# short forms (single-line), also allow no-space IAS36 / IFRS9
-RX_SHORT = re.compile(r"^(IAS|IFRS|IFRIC|SIC)\s*\.?\s*(\d+)\b(.*)$", re.I)
-RX_NOSPACE = re.compile(r"^(IAS|IFRS|IFRIC|SIC)(\d+)\b(.*)$", re.I)
-
-# multi-line building blocks
-RX_CODE_ONLY = re.compile(r"^(IAS|IFRS|IFRIC|SIC)\b$", re.I)
-RX_NUM_ONLY = re.compile(r"^(\d{1,3})\b$", re.I)
-RX_HAS_LETTERS = re.compile(r"[A-Za-zÀ-ÿ]")
-
-# annex anchors
+# ---------- Annex anchors ----------
 RX_ANNEX_IT = re.compile(r"^ALLEGATO\b", re.I)
 RX_ANNEX_EN = re.compile(r"^ANNEX\b", re.I)
 RX_INTL_STDS_IT = re.compile(r"^PRINCIPI\s+CONTABILI\s+INTERNAZIONALI\b", re.I)
-RX_INTL_STDS_EN = re.compile(r"^INTERNATIONAL\s+(ACCOUNTING\s+STANDARDS|FINANCIAL\s+REPORTING\s+STANDARDS)\b", re.I)
+RX_INTL_STDS_EN = re.compile(r"^INTERNATIONAL\s+ACCOUNTING\s+STANDARDS\b", re.I)
+
+# ---------- Markers ----------
+# In consolidated EUR-Lex PDFs, ▼B marks a main block boundary; standards typically start after ▼B
+RX_MARK_B = re.compile(r"^▼B\b|^▼B$", re.I)
+
+# ---------- Standard headings (EN form appears in both EN and IT PDFs) ----------
+RX_IAS_EN = re.compile(r"^INTERNATIONAL\s+ACCOUNTING\s+STANDARD\s+(\d+)\b", re.I)
+RX_IFRS_EN = re.compile(r"^INTERNATIONAL\s+FINANCIAL\s+REPORTING\s+STANDARD\s+(\d+)\b", re.I)
+RX_IFRIC = re.compile(r"^IFRIC\s+(\d+)\b", re.I)
+RX_SIC = re.compile(r"^SIC\s+(\d+)\b", re.I)
+
+# ---------- Fallback short forms (only top-of-page, title-confirmed) ----------
+RX_SHORT = re.compile(r"^(IAS|IFRS|IFRIC|SIC)\s*\.?\s*(\d{1,3})\b(.*)$", re.I)
+RX_NOSPACE = re.compile(r"^(IAS|IFRS|IFRIC|SIC)(\d{1,3})\b(.*)$", re.I)
+RX_HAS_LETTERS = re.compile(r"[A-Za-zÀ-ÿ]")
 
 
 def utc_now_z() -> str:
@@ -67,34 +61,8 @@ def iter_pages(clean_jsonl: Path):
 
 
 def split_lines(text: str) -> List[str]:
+    # normalize_text should already collapse odd spaces/hyphenation reasonably
     return [normalize_text(x) for x in (text or "").splitlines() if normalize_text(x)]
-
-
-def detect_strong_heading_single(line: str, lang: str) -> Optional[str]:
-    if lang == "IT":
-        m = RX_IAS_IT_LONG.match(line)
-        if m: return f"IAS {m.group(1)}"
-        m = RX_IAS_IT_ALT.match(line)
-        if m: return f"IAS {m.group(1)}"
-        m = RX_IFRIC_IT.match(line)
-        if m: return f"IFRIC {m.group(1)}"
-        m = RX_SIC_IT.match(line)
-        if m: return f"SIC {m.group(1)}"
-        m = RX_IFRS_EN.match(line)  # often in EN in IT pdf
-        if m: return f"IFRS {m.group(1)}"
-        m = RX_IAS_EN.match(line)
-        if m: return f"IAS {m.group(1)}"
-        return None
-
-    m = RX_IAS_EN.match(line)
-    if m: return f"IAS {m.group(1)}"
-    m = RX_IFRS_EN.match(line)
-    if m: return f"IFRS {m.group(1)}"
-    m = RX_IFRIC_EN.match(line)
-    if m: return f"IFRIC {m.group(1)}"
-    m = RX_SIC_EN.match(line)
-    if m: return f"SIC {m.group(1)}"
-    return None
 
 
 def title_confirmed(tail: str, next_line: str) -> bool:
@@ -106,26 +74,68 @@ def title_confirmed(tail: str, next_line: str) -> bool:
     return False
 
 
-def detect_heading_top(lines: List[str], lang: str) -> Optional[str]:
+def detect_standard_line(line: str) -> Optional[str]:
     """
-    Detect standard only using very top-of-page lines to avoid false positives.
-    Handles:
-    - strong single-line headings
-    - short forms: IAS 36 / IAS36 / IFRS 9 / IFRS9 + title confirmation
-    - split: IAS (line) + 36 (next line) + title (next)
-    - split: INTERNATIONAL ACCOUNTING STANDARD (line) + 36 (next line)
+    Detect standard_id from a single line (EN headings used also in IT PDFs).
     """
-    top = [ln for ln in lines[:25] if ln]  # top-of-page window
+    m = RX_IAS_EN.match(line)
+    if m:
+        return f"IAS {m.group(1)}"
+    m = RX_IFRS_EN.match(line)
+    if m:
+        return f"IFRS {m.group(1)}"
+    m = RX_IFRIC.match(line)
+    if m:
+        return f"IFRIC {m.group(1)}"
+    m = RX_SIC.match(line)
+    if m:
+        return f"SIC {m.group(1)}"
+    return None
+
+
+def detect_standard_after_mark_b(lines: List[str]) -> Optional[str]:
+    """
+    Primary rule:
+    In annex zone, find ▼B within the top window; then look ahead a few lines for
+    'INTERNATIONAL ... STANDARD <n>' or 'IFRIC <n>' / 'SIC <n>'.
+    """
+    top = [ln for ln in lines[:60] if ln]
     if not top:
         return None
 
-    # 1) strong single-line anywhere in top window
-    for ln in top[:12]:
-        s = detect_strong_heading_single(ln, lang)
-        if s:
-            return s
+    for i, ln in enumerate(top[:40]):
+        # marker line may contain extra tokens; we accept any line starting with ▼B
+        if not RX_MARK_B.match(ln):
+            continue
 
-    # 2) short single-line with/without spaces
+        # sometimes marker and heading are on the same line: "▼B INTERNATIONAL FINANCIAL ..."
+        same = ln
+        same = same.lstrip("▼B").strip()
+        if same:
+            s = detect_standard_line(same)
+            if s:
+                return s
+
+        # look ahead up to 6 non-empty lines
+        for j in range(i + 1, min(i + 8, len(top))):
+            s = detect_standard_line(top[j])
+            if s:
+                return s
+
+        # if ▼B found but no standard heading follows soon, it's probably an internal block (e.g., "WITHDRAWAL ...")
+        # do not treat it as a standard switch
+        return None
+
+    return None
+
+
+def detect_fallback_short_heading(lines: List[str]) -> Optional[str]:
+    """
+    Last-resort fallback:
+    Accept "IAS 36" / "IAS36" etc only if within the very top lines and title-confirmed.
+    This avoids citations deep in the text.
+    """
+    top = [ln for ln in lines[:25] if ln]
     for i in range(min(6, len(top))):
         ln = top[i]
         m = RX_SHORT.match(ln) or RX_NOSPACE.match(ln)
@@ -137,26 +147,6 @@ def detect_heading_top(lines: List[str], lang: str) -> Optional[str]:
         nxt = top[i + 1] if i + 1 < len(top) else ""
         if title_confirmed(tail, nxt):
             return f"{code} {num}"
-
-    # 3) split code + number on next line
-    for i in range(min(6, len(top) - 1)):
-        if RX_CODE_ONLY.match(top[i]) and RX_NUM_ONLY.match(top[i + 1]):
-            code = RX_CODE_ONLY.match(top[i]).group(1).upper()
-            num = RX_NUM_ONLY.match(top[i + 1]).group(1)
-            nxt = top[i + 2] if i + 2 < len(top) else ""
-            if title_confirmed("", nxt):
-                return f"{code} {num}"
-
-    # 4) split EN long heading + number
-    for i in range(min(6, len(top) - 1)):
-        if top[i].upper().strip() in ("INTERNATIONAL ACCOUNTING STANDARD", "INTERNATIONAL FINANCIAL REPORTING STANDARD"):
-            if RX_NUM_ONLY.match(top[i + 1]):
-                num = RX_NUM_ONLY.match(top[i + 1]).group(1)
-                if top[i].upper().startswith("INTERNATIONAL ACCOUNTING"):
-                    return f"IAS {num}"
-                else:
-                    return f"IFRS {num}"
-
     return None
 
 
@@ -192,17 +182,20 @@ def main() -> int:
     if outp.exists():
         outp.unlink()
 
+    # segmentation state
     in_annex = False
     seen_first_standard = False
 
-    current_segment_type = "regulation"
+    current_segment_type = "regulation"  # regulation -> annex -> standard
     current_standard: Optional[str] = None
     seg_start_page = 1
     seg_text_parts: List[str] = []
 
+    # stats
     seg_counts = Counter()
     heading_hits = Counter()
     line_lens = []
+    annex_start_page: Optional[int] = None
 
     started = time.time()
     last_heartbeat = started
@@ -237,20 +230,21 @@ def main() -> int:
 
     with rec.span("segment", pages=limit):
         for i in range(limit):
-            page_no = pages[i].get("page", i + 1)
+            page_no = int(pages[i].get("page", i + 1))
             text = pages[i].get("text_clean", "")
             lines = split_lines(text)
 
             for ln in lines[:200]:
                 line_lens.append(len(ln))
 
-            # Annex detection
+            # ---- Annex detection (enter annex once) ----
             if not in_annex:
-                for ln in lines[:80]:
+                for ln in lines[:120]:
                     if args.lang == "IT":
                         if RX_ANNEX_IT.match(ln) or RX_INTL_STDS_IT.match(ln):
                             in_annex = True
-                            flush_segment(page_no - 1)
+                            annex_start_page = page_no
+                            flush_segment(page_no - 1)  # close regulation
                             current_segment_type = "annex"
                             current_standard = None
                             seg_start_page = page_no
@@ -258,22 +252,33 @@ def main() -> int:
                     else:
                         if RX_ANNEX_EN.match(ln) or RX_INTL_STDS_EN.match(ln):
                             in_annex = True
+                            annex_start_page = page_no
                             flush_segment(page_no - 1)
                             current_segment_type = "annex"
                             current_standard = None
                             seg_start_page = page_no
                             break
 
-            std_found = detect_heading_top(lines, args.lang) if in_annex else None
+            # ---- Standard detection (only in annex) ----
+            std_found = None
+            if in_annex:
+                # primary: ▼B + INTERNATIONAL ... STANDARD <n>
+                std_found = detect_standard_after_mark_b(lines)
+                # fallback: short heading, but conservative
+                if not std_found:
+                    std_found = detect_fallback_short_heading(lines)
+
             if std_found:
                 heading_hits[std_found] += 1
                 if not seen_first_standard:
+                    # close annex up to previous page
                     seen_first_standard = True
-                    flush_segment(page_no - 1)  # annex up to previous page
+                    flush_segment(page_no - 1)
                     current_segment_type = "standard"
                     current_standard = std_found
                     seg_start_page = page_no
                 else:
+                    # switch only if changed
                     if std_found != current_standard:
                         flush_segment(page_no - 1)
                         current_segment_type = "standard"
@@ -292,17 +297,18 @@ def main() -> int:
                 print(f"[{i+1:>4}/{limit}] heartbeat")
                 last_heartbeat = now
 
-    flush_segment(pages[limit - 1].get("page", limit))
+    flush_segment(int(pages[limit - 1].get("page", limit)))
 
     stats = {
         "input": str(inp),
         "output": str(outp),
         "lang": args.lang,
         "pages": limit,
+        "annex_start_page": annex_start_page,
         "segments_written": sum(seg_counts.values()),
-        "segment_ids_top": seg_counts.most_common(80),
-        "standard_heading_hits_top": heading_hits.most_common(80),
-        "unique_standards": len([k for k in heading_hits.keys()]),
+        "segment_ids_top": seg_counts.most_common(120),
+        "standard_heading_hits_top": heading_hits.most_common(120),
+        "unique_standards": len(list(heading_hits.keys())),
         "line_len_min": min(line_lens) if line_lens else 0,
         "line_len_mean": (sum(line_lens) / len(line_lens)) if line_lens else 0,
         "line_len_p95": pct(line_lens, 0.95),
