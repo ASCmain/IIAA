@@ -10,6 +10,7 @@ if str(REPO_ROOT) not in sys.path:
 
 import argparse
 import json
+import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -46,6 +47,7 @@ def main() -> int:
     p.add_argument("--sources", required=True, help="Path to EURLEX_SOURCES_*.json")
     p.add_argument("--out", required=True, help="Directory for raw HTML dumps (debug_dump/eurlex_raw)")
     p.add_argument("--user-agent", default="IIAA/0.2 (html-first; eur-lex fetch)")
+    p.add_argument("--sleep", type=float, default=1.0, help="Seconds to sleep between requests")
     args = p.parse_args()
 
     step = "m2_fetch_eurlex_html"
@@ -53,25 +55,33 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    inputs = {"sources": args.sources, "out": str(out_dir)}
+    inputs = {"sources": args.sources, "out": str(out_dir), "sleep": args.sleep}
     extra = {"user_agent": args.user_agent, "download_ts_utc": ts}
 
     rec = TelemetryRecorder(step=step)
     rec.start(inputs=inputs, extra=extra)
 
     sources = load_sources(Path(args.sources))
-    rec.event("sources_loaded", count=len(sources))
+    total = len(sources)
+    rec.event("sources_loaded", count=total)
 
     fetched: List[Dict[str, Any]] = []
     failed: List[Dict[str, Any]] = []
+    ok = 0
+    ko = 0
 
-    with rec.span("fetch_all", count=len(sources)):
-        for s in sources:
+    with rec.span("fetch_all", count=total):
+        for i, s in enumerate(sources, start=1):
             url = s.get("source_uri", "")
             doc_id = s.get("doc_id", "unknown")
+
+            prefix = f"[{i:02d}/{total:02d}]"
             if not url:
+                ko += 1
                 failed.append({"doc_id": doc_id, "reason": "missing source_uri"})
                 rec.event("fetch_skipped", doc_id=doc_id, reason="missing_source_uri")
+                print(f"{prefix} {doc_id}  SKIP (missing url)  ok={ok} fail={ko}")
+                time.sleep(args.sleep)
                 continue
 
             fname = safe_name(f"{doc_id}.{ts}.html")
@@ -79,6 +89,7 @@ def main() -> int:
 
             try:
                 r = fetch_html(url=url, out_path=str(out_path), user_agent=args.user_agent)
+                ok += 1
                 fetched.append(
                     {
                         "doc_id": doc_id,
@@ -91,9 +102,15 @@ def main() -> int:
                     }
                 )
                 rec.event("fetched_one", doc_id=doc_id, status_code=r.status_code, bytes=r.bytes)
+                kb = r.bytes / 1024.0
+                print(f"{prefix} {doc_id}  OK {r.status_code}  {kb:,.1f} KB  ok={ok} fail={ko}")
             except Exception as e:
+                ko += 1
                 failed.append({"doc_id": doc_id, "url": url, "error": str(e)})
                 rec.event("fetch_failed", doc_id=doc_id, error=str(e))
+                print(f"{prefix} {doc_id}  FAIL  {e}  ok={ok} fail={ko}")
+
+            time.sleep(args.sleep)
 
     manifest = {"downloaded_at_utc": ts, "fetched": fetched, "failed": failed}
     (out_dir / f"manifest.{ts}.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
