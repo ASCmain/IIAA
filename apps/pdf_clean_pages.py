@@ -11,7 +11,7 @@ if str(REPO_ROOT) not in sys.path:
 import argparse
 import json
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import datetime, timezone
 from typing import Dict, List, Tuple
 
@@ -20,7 +20,11 @@ from src.text_normalize import normalize_text
 
 
 RX_MARKER = re.compile(r"(►\s*[A-Z]\d+|►\s*B|▼\s*B|◄|►)")
-RX_WS = re.compile(r"\s+")
+# EUR-Lex consolidated header line (variable last page number)
+RX_EURLEX_HDR = re.compile(
+    r"^0\d{4}R\d{4}\s+—\s+(IT|EN)\s+—\s+\d{2}\.\d{2}\.\d{4}\s+—\s+\d{3}\.\d{3}\s+—\s+\d+$"
+)
+RX_PAGE_ONLY = re.compile(r"^\d{1,4}$")
 
 
 def utc_now_z() -> str:
@@ -47,9 +51,6 @@ def extract_markers(lines: List[str]) -> Tuple[List[str], List[str]]:
 
 
 def build_line_blacklist(pages: List[dict], sample_pages: int, min_ratio: float) -> Dict[str, float]:
-    """
-    Count lines across sample_pages and return lines that appear in >= min_ratio of pages.
-    """
     n = min(sample_pages, len(pages))
     per_page_sets: List[set] = []
     for i in range(n):
@@ -80,6 +81,10 @@ def main() -> int:
     ap.add_argument("--report", required=True, help="Output report.json")
     ap.add_argument("--sample-pages", type=int, default=50)
     ap.add_argument("--min-ratio", type=float, default=0.6)
+
+    # regex-based drops (repeatable)
+    ap.add_argument("--drop-header-regex", action="append", default=[], help="Regex for lines to drop (repeatable)")
+
     args = ap.parse_args()
 
     inp = Path(args.inp)
@@ -91,33 +96,55 @@ def main() -> int:
         for line in f:
             pages.append(json.loads(line))
 
+    # compile drop regex list (include EUR-Lex default)
+    drop_res: List[re.Pattern] = [RX_EURLEX_HDR, RX_PAGE_ONLY]
+    for s in args.drop_header_regex:
+        drop_res.append(re.compile(s))
+
     step = "m2_pdf_clean_pages"
     rec = TelemetryRecorder(step=step)
     rec.start(
         inputs={"in": str(inp), "out": str(outp), "report": str(rep)},
-        extra={"sample_pages": args.sample_pages, "min_ratio": args.min_ratio, "n_pages": len(pages)},
+        extra={
+            "sample_pages": args.sample_pages,
+            "min_ratio": args.min_ratio,
+            "n_pages": len(pages),
+            "drop_regex_count": len(drop_res),
+        },
     )
 
     blacklist = build_line_blacklist(pages, args.sample_pages, args.min_ratio)
 
-    dropped_counts = Counter()
+    dropped_freq = Counter()
+    dropped_regex = Counter()
     marker_counts = Counter()
 
     outp.parent.mkdir(parents=True, exist_ok=True)
     rep.parent.mkdir(parents=True, exist_ok=True)
 
-    with rec.span("clean", n_pages=len(pages), blacklist=len(blacklist)):
+    with rec.span("clean", n_pages=len(pages), blacklist=len(blacklist), drop_regex=len(drop_res)):
         with outp.open("w", encoding="utf-8") as out:
             for row in pages:
                 raw = row.get("text_raw", "")
                 lines = split_lines(raw)
 
-                # drop repeated header/footer lines
                 kept = []
                 for ln in lines:
-                    if ln in blacklist:
-                        dropped_counts[ln] += 1
+                    # regex drop first (variable headers/footers)
+                    dropped_by_regex = False
+                    for rx in drop_res:
+                        if rx.match(ln):
+                            dropped_regex[rx.pattern] += 1
+                            dropped_by_regex = True
+                            break
+                    if dropped_by_regex:
                         continue
+
+                    # frequency drop (static headers/footers)
+                    if ln in blacklist:
+                        dropped_freq[ln] += 1
+                        continue
+
                     kept.append(ln)
 
                 markers, kept2 = extract_markers(kept)
@@ -145,6 +172,7 @@ def main() -> int:
         "min_ratio": args.min_ratio,
         "blacklist_count": len(blacklist),
         "blacklist_top": sorted(blacklist.items(), key=lambda x: (-x[1], x[0]))[:50],
+        "dropped_regex_patterns": [{"pattern": k, "count": v} for k, v in dropped_regex.most_common()],
         "markers_top": marker_counts.most_common(50),
     }
     rep.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
