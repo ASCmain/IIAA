@@ -8,6 +8,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+from src.parse.ifrs_extract import detect_standard_boundary
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
@@ -104,7 +105,7 @@ def main() -> int:
 
             # heading-like lines used to detect standard boundaries (avoid “mentions in body”)
             if is_heading_like(r):
-                sid = detect_standard_from_heading(txt)
+                sid = detect_standard_boundary(txt)
                 if sid:
                     counts_std[sid] += 1
                     if len(std_first_examples[sid]) < 3:
