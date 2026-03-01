@@ -20,24 +20,29 @@ from src.telemetry import TelemetryRecorder
 from src.text_normalize import normalize_text
 
 
-# Strong headings (avoid citations inside paragraphs by anchoring at line start)
+# Strong headings at line start
 RX_IAS_EN = re.compile(r"^INTERNATIONAL\s+ACCOUNTING\s+STANDARD\s+(\d+)\b", re.I)
-RX_IAS_IT = re.compile(r"^PRINCIPIO\s+CONTABILE\s+INTERNAZIONALE\s+IAS\s+(\d+)\b", re.I)
+RX_IAS_IT_LONG = re.compile(r"^PRINCIPIO\s+CONTABILE\s+INTERNAZIONALE\s+IAS\s+(\d+)\b", re.I)
+RX_IAS_IT_ALT = re.compile(r"^PRINCIPIO\s+CONTABILE\s+INTERNAZIONALE\s+(\d+)\b", re.I)
+
 RX_IFRS_EN = re.compile(r"^INTERNATIONAL\s+FINANCIAL\s+REPORTING\s+STANDARD\s+(\d+)\b", re.I)
-RX_IFRS_IT = re.compile(r"^INTERNATIONAL\s+FINANCIAL\s+REPORTING\s+STANDARD\s+(\d+)\b", re.I)  # often not translated
 RX_IFRIC_EN = re.compile(r"^IFRIC\s+(\d+)\b", re.I)
-RX_IFRIC_IT = re.compile(r"^INTERPRETAZIONE\s+IFRIC\s+(\d+)\b", re.I)
 RX_SIC_EN = re.compile(r"^SIC\s+(\d+)\b", re.I)
+
+RX_IFRIC_IT = re.compile(r"^INTERPRETAZIONE\s+IFRIC\s+(\d+)\b", re.I)
 RX_SIC_IT = re.compile(r"^INTERPRETAZIONE\s+SIC\s+(\d+)\b", re.I)
 
-# Short-form heading lines sometimes appear (e.g., "IAS 36", "IFRS 9") — allow only in ANNEX zone.
-RX_STD_SHORT = re.compile(r"^(IAS|IFRS|IFRIC|SIC)\s+(\d+)\b", re.I)
+# Short form: allow only near top-of-page and with title confirmation
+RX_STD_SHORT = re.compile(r"^(IAS|IFRS|IFRIC|SIC)\s+(\d+)\b(.*)$", re.I)
 
 # Annex anchors
 RX_ANNEX_IT = re.compile(r"^ALLEGATO\b", re.I)
 RX_ANNEX_EN = re.compile(r"^ANNEX\b", re.I)
 RX_INTL_STDS_IT = re.compile(r"^PRINCIPI\s+CONTABILI\s+INTERNAZIONALI\b", re.I)
 RX_INTL_STDS_EN = re.compile(r"^INTERNATIONAL\s+(ACCOUNTING\s+STANDARDS|FINANCIAL\s+REPORTING\s+STANDARDS)\b", re.I)
+
+# Title-like: has letters and isn't just punctuation/short tokens
+RX_HAS_LETTERS = re.compile(r"[A-Za-zÀ-ÿ]")
 
 
 def utc_now_z() -> str:
@@ -62,20 +67,22 @@ def split_lines(text: str) -> List[str]:
     return [normalize_text(x) for x in (text or "").splitlines() if normalize_text(x)]
 
 
-def detect_strong_standard_heading(line: str, lang_hint: str) -> Optional[str]:
-    """
-    Return standard_id like 'IAS 36', 'IFRS 9', 'IFRIC 23', 'SIC 12' only for strong headings.
-    """
-    if lang_hint.upper() == "IT":
-        m = RX_IAS_IT.match(line)
+def detect_strong_standard_heading(line: str, lang: str) -> Optional[str]:
+    if lang == "IT":
+        m = RX_IAS_IT_LONG.match(line)
+        if m: return f"IAS {m.group(1)}"
+        m = RX_IAS_IT_ALT.match(line)
         if m: return f"IAS {m.group(1)}"
         m = RX_IFRIC_IT.match(line)
         if m: return f"IFRIC {m.group(1)}"
         m = RX_SIC_IT.match(line)
         if m: return f"SIC {m.group(1)}"
-        # IFRS headings often appear in EN even in IT documents
-        m = RX_IFRS_IT.match(line)
+        # IFRS headings often appear in EN even in IT doc
+        m = RX_IFRS_EN.match(line)
         if m: return f"IFRS {m.group(1)}"
+        # IAS may also appear as EN long heading in some sections
+        m = RX_IAS_EN.match(line)
+        if m: return f"IAS {m.group(1)}"
         return None
 
     # EN
@@ -90,15 +97,54 @@ def detect_strong_standard_heading(line: str, lang_hint: str) -> Optional[str]:
     return None
 
 
+def title_confirmed(short_line: str, next_line: str) -> bool:
+    """
+    Confirm a short heading 'IAS 36' etc by checking either:
+    - same line contains a title tail of decent length with letters, or
+    - next line looks like a title (letters + length)
+    """
+    m = RX_STD_SHORT.match(short_line)
+    if not m:
+        return False
+    tail = (m.group(3) or "").strip()
+    if tail and len(tail) >= 10 and RX_HAS_LETTERS.search(tail):
+        return True
+    if next_line and len(next_line) >= 10 and RX_HAS_LETTERS.search(next_line):
+        return True
+    return False
+
+
+def detect_short_heading_top(lines: List[str]) -> Optional[str]:
+    """
+    Consider only very top-of-page lines to avoid false positives.
+    """
+    top = [ln for ln in lines[:15] if ln]  # first 15 non-empty-ish lines
+    if not top:
+        return None
+
+    # check first 3 lines for short heading
+    for i in range(min(3, len(top))):
+        ln = top[i]
+        m = RX_STD_SHORT.match(ln)
+        if not m:
+            continue
+        code = m.group(1).upper()
+        num = m.group(2)
+        nxt = top[i + 1] if i + 1 < len(top) else ""
+        if title_confirmed(ln, nxt):
+            return f"{code} {num}"
+    return None
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--in", dest="inp", required=True, help="Input clean.jsonl")
-    ap.add_argument("--out", required=True, help="Output segments.jsonl")
-    ap.add_argument("--stats", required=True, help="Output stats.json")
+    ap.add_argument("--in", dest="inp", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--stats", required=True)
     ap.add_argument("--lang", required=True, choices=["IT", "EN"])
     ap.add_argument("--progress-every", type=int, default=50)
     ap.add_argument("--heartbeat-seconds", type=int, default=10)
-    ap.add_argument("--max-pages", type=int, default=0, help="0=all")
+    ap.add_argument("--max-pages", type=int, default=0)
     args = ap.parse_args()
 
     inp = Path(args.inp)
@@ -119,23 +165,29 @@ def main() -> int:
         extra={"pages": limit, "progress_every": args.progress_every, "heartbeat_seconds": args.heartbeat_seconds},
     )
 
-    # State
+    # Ensure out file empty
+    if outp.exists():
+        outp.unlink()
+
     in_annex = False
-    current_segment_type = "regulation"  # until annex
+    seen_first_standard = False
+
+    current_segment_type = "regulation"
     current_standard: Optional[str] = None
     seg_start_page = 1
     seg_text_parts: List[str] = []
 
-    # Stats
     seg_counts = Counter()
     heading_hits = Counter()
-    para_lens = []  # crude proxy: line lengths; refined paragraph stats will come in next script
+    line_lens = []
 
     started = time.time()
     last_heartbeat = started
 
     def flush_segment(end_page: int):
         nonlocal seg_start_page, seg_text_parts, current_segment_type, current_standard
+        if end_page < seg_start_page:
+            return
         text = "\n".join([t for t in seg_text_parts if t]).strip()
         if not text:
             seg_text_parts = []
@@ -160,60 +212,68 @@ def main() -> int:
         seg_text_parts = []
         seg_start_page = end_page + 1
 
-    # Ensure out file empty
-    if outp.exists():
-        outp.unlink()
-
     with rec.span("segment", pages=limit):
         for i in range(limit):
             page_no = pages[i].get("page", i + 1)
             text = pages[i].get("text_clean", "")
             lines = split_lines(text)
 
-            # quick stats proxy
             for ln in lines[:200]:
-                para_lens.append(len(ln))
+                line_lens.append(len(ln))
 
-            # Annex detection
+            # Annex detection (only once)
             if not in_annex:
-                for ln in lines[:40]:
-                    if (args.lang == "IT" and RX_ANNEX_IT.match(ln)) or (args.lang == "EN" and RX_ANNEX_EN.match(ln)):
-                        in_annex = True
-                        # close regulation segment up to previous page
-                        flush_segment(page_no - 1)
-                        current_segment_type = "annex"
-                        current_standard = None
-                        seg_start_page = page_no
-                        break
+                for ln in lines[:60]:
+                    if args.lang == "IT":
+                        if RX_ANNEX_IT.match(ln) or RX_INTL_STDS_IT.match(ln):
+                            in_annex = True
+                            flush_segment(page_no - 1)
+                            current_segment_type = "annex"
+                            current_standard = None
+                            seg_start_page = page_no
+                            break
+                    else:
+                        if RX_ANNEX_EN.match(ln) or RX_INTL_STDS_EN.match(ln):
+                            in_annex = True
+                            flush_segment(page_no - 1)
+                            current_segment_type = "annex"
+                            current_standard = None
+                            seg_start_page = page_no
+                            break
 
-            # Standard detection (only when in annex zone)
+            # Standard detection (only in annex)
+            std_found = None
             if in_annex:
-                std_found = None
+                # 1) strong headings anywhere near top
                 for ln in lines[:80]:
                     std_found = detect_strong_standard_heading(ln, args.lang)
                     if std_found:
                         break
-                # allow short-form only if line is very "heading-like" and we are in annex
+                # 2) short headings only at very top, with title confirmation
                 if not std_found:
-                    for ln in lines[:50]:
-                        m = RX_STD_SHORT.match(ln)
-                        if m and len(ln) <= 18:
-                            std_found = f"{m.group(1).upper()} {m.group(2)}"
-                            break
+                    std_found = detect_short_heading_top(lines)
 
-                if std_found and std_found != current_standard:
-                    heading_hits[std_found] += 1
-                    # flush previous segment up to prev page
-                    flush_segment(page_no - 1)
+            if std_found:
+                heading_hits[std_found] += 1
+
+                # First time we enter a standard: close annex segment up to previous page
+                if not seen_first_standard:
+                    seen_first_standard = True
+                    flush_segment(page_no - 1)  # annex up to prev page
                     current_segment_type = "standard"
                     current_standard = std_found
                     seg_start_page = page_no
+                else:
+                    # Switch only if different from current
+                    if std_found != current_standard:
+                        flush_segment(page_no - 1)
+                        current_segment_type = "standard"
+                        current_standard = std_found
+                        seg_start_page = page_no
 
-            # accumulate current page text
             if text:
                 seg_text_parts.append(text)
 
-            # progress
             if args.progress_every > 0 and (i + 1) % args.progress_every == 0:
                 elapsed = time.time() - started
                 print(f"[{i+1:>4}/{limit}] segmented pages (elapsed {elapsed:.1f}s)")
@@ -223,7 +283,6 @@ def main() -> int:
                 print(f"[{i+1:>4}/{limit}] heartbeat")
                 last_heartbeat = now
 
-    # flush tail
     flush_segment(pages[limit - 1].get("page", limit))
 
     stats = {
@@ -232,12 +291,12 @@ def main() -> int:
         "lang": args.lang,
         "pages": limit,
         "segments_written": sum(seg_counts.values()),
-        "segment_ids": seg_counts.most_common(50),
-        "standard_heading_hits_top": heading_hits.most_common(50),
-        "line_len_min": min(para_lens) if para_lens else 0,
-        "line_len_mean": (sum(para_lens) / len(para_lens)) if para_lens else 0,
-        "line_len_p95": pct(para_lens, 0.95),
-        "line_len_max": max(para_lens) if para_lens else 0,
+        "segment_ids_top": seg_counts.most_common(60),
+        "standard_heading_hits_top": heading_hits.most_common(60),
+        "line_len_min": min(line_lens) if line_lens else 0,
+        "line_len_mean": (sum(line_lens) / len(line_lens)) if line_lens else 0,
+        "line_len_p95": pct(line_lens, 0.95),
+        "line_len_max": max(line_lens) if line_lens else 0,
         "generated_at_utc": utc_now_z(),
     }
     statsp.write_text(json.dumps(stats, indent=2, ensure_ascii=False), encoding="utf-8")
