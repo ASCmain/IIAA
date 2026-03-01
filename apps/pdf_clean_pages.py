@@ -11,6 +11,7 @@ if str(REPO_ROOT) not in sys.path:
 import argparse
 import json
 import re
+import time
 from collections import Counter
 from datetime import datetime, timezone
 from typing import Dict, List, Tuple
@@ -20,7 +21,6 @@ from src.text_normalize import normalize_text
 
 
 RX_MARKER = re.compile(r"(►\s*[A-Z]\d+|►\s*B|▼\s*B|◄|►)")
-# EUR-Lex consolidated header line (variable last page number)
 RX_EURLEX_HDR = re.compile(
     r"^0\d{4}R\d{4}\s+—\s+(IT|EN)\s+—\s+\d{2}\.\d{2}\.\d{4}\s+—\s+\d{3}\.\d{3}\s+—\s+\d+$"
 )
@@ -76,27 +76,31 @@ def join_lines(lines: List[str]) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--in", dest="inp", required=True, help="Input pages.jsonl")
-    ap.add_argument("--out", required=True, help="Output clean.jsonl")
-    ap.add_argument("--report", required=True, help="Output report.json")
+    ap.add_argument("--in", dest="inp", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--report", required=True)
+    ap.add_argument("--stats", default="", help="Optional stats JSON output (default: <out>.stats.json)")
     ap.add_argument("--sample-pages", type=int, default=50)
     ap.add_argument("--min-ratio", type=float, default=0.6)
-
-    # regex-based drops (repeatable)
-    ap.add_argument("--drop-header-regex", action="append", default=[], help="Regex for lines to drop (repeatable)")
-
+    ap.add_argument("--drop-header-regex", action="append", default=[])
+    ap.add_argument("--progress-every", type=int, default=50)
+    ap.add_argument("--heartbeat-seconds", type=int, default=10)
     args = ap.parse_args()
 
     inp = Path(args.inp)
     outp = Path(args.out)
     rep = Path(args.report)
+    outp.parent.mkdir(parents=True, exist_ok=True)
+    rep.parent.mkdir(parents=True, exist_ok=True)
+
+    statsp = Path(args.stats) if args.stats else Path(str(outp) + ".stats.json")
+    statsp.parent.mkdir(parents=True, exist_ok=True)
 
     pages: List[dict] = []
     with inp.open("r", encoding="utf-8") as f:
         for line in f:
             pages.append(json.loads(line))
 
-    # compile drop regex list (include EUR-Lex default)
     drop_res: List[re.Pattern] = [RX_EURLEX_HDR, RX_PAGE_ONLY]
     for s in args.drop_header_regex:
         drop_res.append(re.compile(s))
@@ -104,12 +108,14 @@ def main() -> int:
     step = "m2_pdf_clean_pages"
     rec = TelemetryRecorder(step=step)
     rec.start(
-        inputs={"in": str(inp), "out": str(outp), "report": str(rep)},
+        inputs={"in": str(inp), "out": str(outp), "report": str(rep), "stats": str(statsp)},
         extra={
             "sample_pages": args.sample_pages,
             "min_ratio": args.min_ratio,
             "n_pages": len(pages),
             "drop_regex_count": len(drop_res),
+            "progress_every": args.progress_every,
+            "heartbeat_seconds": args.heartbeat_seconds,
         },
     )
 
@@ -119,18 +125,22 @@ def main() -> int:
     dropped_regex = Counter()
     marker_counts = Counter()
 
-    outp.parent.mkdir(parents=True, exist_ok=True)
-    rep.parent.mkdir(parents=True, exist_ok=True)
+    chars_before = 0
+    chars_after = 0
+
+    started = time.time()
+    last_heartbeat = started
 
     with rec.span("clean", n_pages=len(pages), blacklist=len(blacklist), drop_regex=len(drop_res)):
         with outp.open("w", encoding="utf-8") as out:
-            for row in pages:
+            for idx, row in enumerate(pages, start=1):
                 raw = row.get("text_raw", "")
+                chars_before += len(raw)
+
                 lines = split_lines(raw)
 
                 kept = []
                 for ln in lines:
-                    # regex drop first (variable headers/footers)
                     dropped_by_regex = False
                     for rx in drop_res:
                         if rx.match(ln):
@@ -140,7 +150,6 @@ def main() -> int:
                     if dropped_by_regex:
                         continue
 
-                    # frequency drop (static headers/footers)
                     if ln in blacklist:
                         dropped_freq[ln] += 1
                         continue
@@ -152,6 +161,7 @@ def main() -> int:
                     marker_counts[m] += 1
 
                 cleaned_text = join_lines(kept2)
+                chars_after += len(cleaned_text)
 
                 out_row = {
                     "source_pdf": row.get("source_pdf"),
@@ -163,6 +173,15 @@ def main() -> int:
                     "cleaned_at_utc": utc_now_z(),
                 }
                 out.write(json.dumps(out_row, ensure_ascii=False) + "\n")
+
+                if args.progress_every > 0 and idx % args.progress_every == 0:
+                    elapsed = time.time() - started
+                    print(f"[{idx:>4}/{len(pages)}] cleaned pages (elapsed {elapsed:.1f}s)")
+
+                now = time.time()
+                if now - last_heartbeat >= args.heartbeat_seconds:
+                    print(f"[{idx:>4}/{len(pages)}] heartbeat")
+                    last_heartbeat = now
 
     report = {
         "input": str(inp),
@@ -177,8 +196,23 @@ def main() -> int:
     }
     rep.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    rec.finalize(outputs={"out": str(outp), "report": str(rep), "blacklist_count": len(blacklist)})
-    print(json.dumps({"out": str(outp), "report": str(rep), "blacklist_count": len(blacklist)}, indent=2, ensure_ascii=False))
+    stats: Dict = {
+        "in": str(inp),
+        "out": str(outp),
+        "pages": len(pages),
+        "chars_before": chars_before,
+        "chars_after": chars_after,
+        "compression_ratio": (chars_after / chars_before) if chars_before else 0,
+        "regex_drop_total": sum(dropped_regex.values()),
+        "freq_drop_total": sum(dropped_freq.values()),
+        "markers_total": sum(marker_counts.values()),
+        "top_markers": marker_counts.most_common(20),
+        "generated_at_utc": utc_now_z(),
+    }
+    statsp.write_text(json.dumps(stats, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    rec.finalize(outputs={"out": str(outp), "report": str(rep), "stats": str(statsp), "blacklist_count": len(blacklist)})
+    print(json.dumps({"out": str(outp), "report": str(rep), "stats": str(statsp)}, indent=2, ensure_ascii=False))
     return 0
 
 
