@@ -24,7 +24,7 @@ STD_EN_IFRS = re.compile(r"^INTERNATIONAL\s+FINANCIAL\s+REPORTING\s+STANDARD\s+(
 
 # Long-form IT (IAS)
 STD_IT_IAS = re.compile(
-    r"^(PRINCIPIO\s+CONTABILE\s+INTERNAZIONALE|PRINCIPI?\s+CONTABILI?\s+INTERNAZIONALI?)\s+(\d+)\b",
+    r"^(PRINCIPIO\s+CONTABILE\s+INTERNAZIONALE|PRINCIPI?\s+CONTABILI?\s+INTERNAZIONALI?)\s*(?:N\.?\s*)?(\d+)\b",
     re.I,
 )
 
@@ -34,6 +34,10 @@ STD_SHORT_ONLY = re.compile(r"^(IAS|IFRS|IFRIC|SIC)\s+(\d+)\s*$", re.I)
 # IFRIC and SIC are often short-form headings
 STD_IFRIC = re.compile(r"^IFRIC\s+(\d+)\s*$", re.I)
 STD_SIC = re.compile(r"^SIC\s+(\d+)\s*$", re.I)
+
+# Long-form IT (IFRIC / SIC)
+STD_IT_IFRIC = re.compile(r"^INTERPRETAZIONE\s+IFRIC\s+(\d+)\b", re.I)
+STD_IT_SIC = re.compile(r"^INTERPRETAZIONE\s+SIC\s+(\d+)\b", re.I)  # opzionale
 
 
 def detect_standard_boundary(text: str) -> Optional[str]:
@@ -60,6 +64,14 @@ def detect_standard_boundary(text: str) -> Optional[str]:
         return f"IFRIC {m.group(1)}"
 
     m = STD_SIC.match(t)
+    if m:
+        return f"SIC {m.group(1)}"
+
+    m = STD_IT_IFRIC.match(t)
+    if m:
+        return f"IFRIC {m.group(1)}"
+
+    m = STD_IT_SIC.match(t)
     if m:
         return f"SIC {m.group(1)}"
 
