@@ -21,9 +21,10 @@ from src.telemetry import TelemetryRecorder
 
 
 RX_LANG = re.compile(r"_(IT|EN)_TXT$", re.I)
-RX_OJ = re.compile(r"^(OJ_[A-Z]_[0-9A-Z_]+)", re.I)          # e.g. OJ_L_202600338_IT_TXT
-RX_CELEX = re.compile(r"^(CELEX_[0-9A-Z\-]+)", re.I)         # e.g. CELEX_02023R1803-20250730_IT_TXT
-RX_CELEX_FAMILY = re.compile(r"^(CELEX_[0-9A-Z\-]+)", re.I)  # keep full celex id if present
+
+# OJ family should be OJ_L_YYYYNNNNNN (no _IT/_EN suffix)
+RX_OJ_FAMILY = re.compile(r"^(OJ_[A-Z]_[0-9]{9})", re.I)  # e.g. OJ_L_202600338
+RX_CELEX = re.compile(r"^(CELEX_[0-9A-Z\-]+)", re.I)
 
 
 def sha256_file(path: Path) -> str:
@@ -63,24 +64,20 @@ def guess_ids(path: Path) -> Tuple[str, str, Optional[str]]:
     doc_family_id groups IT/EN variants and versions.
     """
     stem = normalize_stem(path.stem)
-
     lang = guess_language_from_stem(stem)
 
     # Unique per file
     doc_id = stem
 
     # Family id
-    m = RX_OJ.match(stem)
+    m = RX_OJ_FAMILY.match(stem)
     if m:
-        family = m.group(1)
-        return doc_id, family, lang
+        return doc_id, m.group(1), lang
 
     m = RX_CELEX.match(stem)
     if m:
-        family = m.group(1)
-        return doc_id, family, lang
+        return doc_id, m.group(1), lang
 
-    # fallback: use stem as family too
     return doc_id, stem, lang
 
 
@@ -156,7 +153,7 @@ def main() -> int:
                         "sha256": h,
                         "bytes": size_bytes,
                         "pages": pages,
-                        "language": lang,  # may be None (e.g., EFRAG)
+                        "language": lang,
                         "doc_type": doc_type,
                         "layout_hint": "two_col" if two_col else "one_col",
                         "registered_at_utc": utc_now_z(),
