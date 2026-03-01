@@ -7,21 +7,103 @@ from typing import Dict, List, Optional, Tuple
 from src.parse.eurlex_html import TextBlock
 
 
-# Standard boundaries
-STD_IAS = re.compile(r"^INTERNATIONAL\s+ACCOUNTING\s+STANDARD\s+(\d+)\b", re.I)
-STD_IFRS = re.compile(r"^INTERNATIONAL\s+FINANCIAL\s+REPORTING\s+STANDARD\s+(\d+)\b", re.I)
-STD_IFRIC = re.compile(r"^IFRIC\s+(\d+)\b", re.I)
-STD_SIC = re.compile(r"^SIC\s+(\d+)\b", re.I)
-STD_FALLBACK = re.compile(r"\b(IAS|IFRS|IFRIC|SIC)\s*(\d+)\b", re.I)
+# --- EUR-Lex markers (appear in PDFs and sometimes in HTML conversions) ---
+MARKERS = re.compile(r"[►▼]\s*[A-Z]\d*|[◄►▼]")
 
-# Paragraph starts
+
+def strip_markers(s: str) -> str:
+    s = (s or "").replace("\u00a0", " ")
+    s = MARKERS.sub("", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+# --- Standard boundaries (STRICT) ---
+# Long-form EN
+STD_EN_IAS = re.compile(r"^INTERNATIONAL\s+ACCOUNTING\s+STANDARD\s+(\d+)\b", re.I)
+STD_EN_IFRS = re.compile(r"^INTERNATIONAL\s+FINANCIAL\s+REPORTING\s+STANDARD\s+(\d+)\b", re.I)
+
+# Long-form IT (IAS)
+STD_IT_IAS = re.compile(
+    r"^(PRINCIPIO\s+CONTABILE\s+INTERNAZIONALE|PRINCIPI?\s+CONTABILI?\s+INTERNAZIONALI?)\s+(\d+)\b",
+    re.I,
+)
+
+# Short-form line (TOC and many headers): MUST be alone (no trailing prose)
+STD_SHORT_ONLY = re.compile(r"^(IAS|IFRS|IFRIC|SIC)\s+(\d+)\s*$", re.I)
+
+# IFRIC and SIC are often short-form headings
+STD_IFRIC = re.compile(r"^IFRIC\s+(\d+)\s*$", re.I)
+STD_SIC = re.compile(r"^SIC\s+(\d+)\s*$", re.I)
+
+
+def detect_standard_boundary(text: str) -> Optional[str]:
+    """
+    Returns a standard_id only for *boundary* lines.
+    Important: avoids false positives like 'IFRS 9 permits ...' in body text.
+    """
+    t = strip_markers(text)
+
+    m = STD_EN_IAS.match(t)
+    if m:
+        return f"IAS {m.group(1)}"
+
+    m = STD_EN_IFRS.match(t)
+    if m:
+        return f"IFRS {m.group(1)}"
+
+    m = STD_IT_IAS.match(t)
+    if m:
+        return f"IAS {m.group(2)}"
+
+    m = STD_IFRIC.match(t)
+    if m:
+        return f"IFRIC {m.group(1)}"
+
+    m = STD_SIC.match(t)
+    if m:
+        return f"SIC {m.group(1)}"
+
+    # TOC-style short code must be the entire line
+    m = STD_SHORT_ONLY.match(t)
+    if m:
+        return f"{m.group(1).upper()} {m.group(2)}"
+
+    return None
+
+
+# --- Paragraph starts ---
 PARA_INT = re.compile(r"^(\d{1,3})\s+(.+)$")
 PARA_DOTTED = re.compile(r"^(\d+(?:\.\d+){1,4})\s+(.+)$")
 PARA_APP_B = re.compile(r"^(B\d+)\s+(.+)$")
 PARA_APP_IE = re.compile(r"^(IE\d+)\s+(.+)$")
 PARA_APP_BC = re.compile(r"^(BC\d+)\s+(.+)$")
 
-HEADING_EN = re.compile(r"^(OBJECTIVE|SCOPE|DEFINITIONS|RECOGNITION|MEASUREMENT|DISCLOSURE|EFFECTIVE\s+DATE|TRANSITION)\b", re.I)
+
+def paragraph_start(text: str) -> Optional[Tuple[str, str]]:
+    t = strip_markers(text)
+    for rx in (PARA_DOTTED, PARA_INT, PARA_APP_B, PARA_APP_IE, PARA_APP_BC):
+        m = rx.match(t)
+        if m:
+            return m.group(1), m.group(2)
+    return None
+
+
+# --- Section headings (EN + IT) ---
+HEADING_EN = re.compile(
+    r"^(OBJECTIVE|SCOPE|DEFINITIONS|RECOGNITION|MEASUREMENT|DISCLOSURE|PRESENTATION|EFFECTIVE\s+DATE|TRANSITION|WITHDRAWAL)\b",
+    re.I,
+)
+
+HEADING_IT = re.compile(
+    r"^(OBIETTIVO|AMBITO\s+DI\s+APPLICAZIONE|DEFINIZIONI|RILEVAZIONE|VALUTAZIONE|INFORMATIVA|PRESENTAZIONE|DATA\s+DI\s+ENTRATA\s+IN\s+VIGORE|DISPOSIZIONI\s+TRANSITORIE|RITIRO|ELIMINAZIONE)\b",
+    re.I,
+)
+
+# Also accept "Appendix A/B", "Appendice A/B", "Basis for Conclusions", etc.
+HEADING_APPX = re.compile(
+    r"^(APPENDIX|APPENDICE)\s+[A-Z]\b|^BASIS\s+FOR\s+CONCLUSIONS\b|^BASIS\s+OF\s+CONCLUSIONS\b|^GUIDANCE\s+ON\b",
+    re.I,
+)
 
 
 @dataclass
@@ -31,36 +113,29 @@ class Paragraph:
     section_path: Optional[str] = None
 
 
-def detect_standard_id(text: str) -> Optional[str]:
-    m = STD_IAS.match(text)
-    if m: return f"IAS {m.group(1)}"
-    m = STD_IFRS.match(text)
-    if m: return f"IFRS {m.group(1)}"
-    m = STD_IFRIC.match(text)
-    if m: return f"IFRIC {m.group(1)}"
-    m = STD_SIC.match(text)
-    if m: return f"SIC {m.group(1)}"
-    return None
-
-
-def paragraph_start(text: str) -> Optional[Tuple[str, str]]:
-    for rx in (PARA_DOTTED, PARA_INT, PARA_APP_B, PARA_APP_IE, PARA_APP_BC):
-        m = rx.match(text)
-        if m:
-            return m.group(1), m.group(2)
-    return None
+def _normalize_heading(s: str) -> str:
+    t = strip_markers(s)
+    # keep original-ish but stable
+    return t[:120].strip()
 
 
 def extract_standard_paragraphs(blocks: List[TextBlock]) -> Dict[str, List[Paragraph]]:
     """
     Returns: {standard_id: [Paragraph, ...]}
-    Strategy:
-    - scan blocks; when standard boundary found, set current standard
-    - parse paragraph starts; accumulate until next paragraph start or next standard
+
+    Strategy (robust, conservative):
+    - Identify *standard boundaries* only via strict patterns:
+        - "INTERNATIONAL ... STANDARD N" (EN)
+        - "PRINCIPIO CONTABILE INTERNAZIONALE N" (IT)
+        - TOC-style lines exactly "IFRS 9", "IAS 36", etc.
+      This avoids 'IFRS 9 permits ...' false positives.
+    - Within a standard, capture section headings (EN/IT) to build section_path hints.
+    - Paragraphs are extracted by detecting numeric/dotted/appendix keys at line start.
     """
     cur_std: Optional[str] = None
     cur_section: List[str] = []
     out: Dict[str, List[Paragraph]] = {}
+
     cur_para_key: Optional[str] = None
     cur_para_lines: List[str] = []
     cur_para_section: Optional[str] = None
@@ -69,41 +144,49 @@ def extract_standard_paragraphs(blocks: List[TextBlock]) -> Dict[str, List[Parag
         nonlocal cur_para_key, cur_para_lines, cur_para_section
         if cur_std and cur_para_key and cur_para_lines:
             out.setdefault(cur_std, []).append(
-                Paragraph(key=cur_para_key, text=" ".join(cur_para_lines).strip(), section_path=cur_para_section)
+                Paragraph(
+                    key=cur_para_key,
+                    text=" ".join(cur_para_lines).strip(),
+                    section_path=cur_para_section,
+                )
             )
         cur_para_key = None
         cur_para_lines = []
         cur_para_section = None
 
     for b in blocks:
-        std = detect_standard_id(b.text)
+        raw = b.text or ""
+        t = strip_markers(raw)
+        if not t:
+            continue
+
+        std = detect_standard_boundary(t)
         if std:
             flush_para()
             cur_std = std
             cur_section = [std]
             continue
 
-        # track headings as section path hints
-        if b.kind == "heading" and HEADING_EN.match(b.text):
-            # keep within current standard context if any
-            if cur_std:
-                # normalize capitalization
-                cur_section = [cur_std, b.text.title()]
+        # headings (section_path hints)
+        if cur_std:
+            if b.kind == "heading" or HEADING_EN.match(t) or HEADING_IT.match(t) or HEADING_APPX.match(t):
+                if HEADING_EN.match(t) or HEADING_IT.match(t) or HEADING_APPX.match(t):
+                    cur_section = [cur_std, _normalize_heading(t)]
+                # else: ignore generic headings
+                # do not continue; headings could also be paragraph-like in some conversions
+                # (but usually they are not)
+        else:
             continue
 
-        if not cur_std:
-            continue
-
-        ps = paragraph_start(b.text)
+        ps = paragraph_start(t)
         if ps:
             flush_para()
             cur_para_key = ps[0]
             cur_para_lines = [ps[1]]
             cur_para_section = " > ".join(cur_section) if cur_section else cur_std
         else:
-            # continuation
             if cur_para_key:
-                cur_para_lines.append(b.text)
+                cur_para_lines.append(t)
 
     flush_para()
     return out
