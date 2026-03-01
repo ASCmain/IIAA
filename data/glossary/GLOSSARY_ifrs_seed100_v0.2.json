@@ -1,0 +1,1976 @@
+{
+  "schema_version": "0.2",
+  "glossary_id": "ifrs_terms_v0.2_seed100",
+  "languages": [
+    "it",
+    "en"
+  ],
+  "fields": [
+    "term_id",
+    "lemma_it",
+    "lemma_en",
+    "aliases_it",
+    "aliases_en",
+    "definition_it",
+    "definition_en",
+    "domain_tags",
+    "standards_refs"
+  ],
+  "items": [
+    {
+      "term_id": "T001_financial_statements",
+      "lemma_it": "bilancio",
+      "lemma_en": "financial statements",
+      "aliases_it": [
+        "prospetti di bilancio",
+        "bilancio d'esercizio"
+      ],
+      "aliases_en": [
+        "financial statement",
+        "accounts"
+      ],
+      "definition_it": "Insieme dei prospetti contabili di periodo.",
+      "definition_en": "Set of periodic financial reports.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS"
+      ]
+    },
+    {
+      "term_id": "T002_statement_of_financial_position",
+      "lemma_it": "stato patrimoniale",
+      "lemma_en": "statement of financial position",
+      "aliases_it": [
+        "situazione patrimoniale"
+      ],
+      "aliases_en": [
+        "balance sheet"
+      ],
+      "definition_it": "Prospetto che presenta attività, passività e patrimonio netto.",
+      "definition_en": "Statement presenting assets, liabilities and equity.",
+      "domain_tags": [
+        "presentation"
+      ],
+      "standards_refs": [
+        "IFRS 18",
+        "IAS 1"
+      ]
+    },
+    {
+      "term_id": "T003_statement_of_profit_or_loss",
+      "lemma_it": "conto economico",
+      "lemma_en": "statement of profit or loss",
+      "aliases_it": [
+        "conto profitti e perdite"
+      ],
+      "aliases_en": [
+        "income statement",
+        "P&L"
+      ],
+      "definition_it": "Prospetto della performance economica del periodo.",
+      "definition_en": "Statement of performance for the period.",
+      "domain_tags": [
+        "presentation"
+      ],
+      "standards_refs": [
+        "IFRS 18",
+        "IAS 1"
+      ]
+    },
+    {
+      "term_id": "T004_statement_of_comprehensive_income",
+      "lemma_it": "prospetto della redditività complessiva",
+      "lemma_en": "statement of comprehensive income",
+      "aliases_it": [
+        "OCI"
+      ],
+      "aliases_en": [
+        "statement of comprehensive income",
+        "OCI"
+      ],
+      "definition_it": "Prospetto che include utile/perdita e altre componenti di conto economico complessivo.",
+      "definition_en": "Statement including profit/loss and other comprehensive income.",
+      "domain_tags": [
+        "presentation"
+      ],
+      "standards_refs": [
+        "IAS 1",
+        "IFRS 18"
+      ]
+    },
+    {
+      "term_id": "T005_statement_of_cash_flows",
+      "lemma_it": "rendiconto finanziario",
+      "lemma_en": "statement of cash flows",
+      "aliases_it": [
+        "cash flow statement"
+      ],
+      "aliases_en": [
+        "cash flow statement"
+      ],
+      "definition_it": "Prospetto dei flussi di cassa dell’esercizio.",
+      "definition_en": "Statement of cash movements for the period.",
+      "domain_tags": [
+        "presentation"
+      ],
+      "standards_refs": [
+        "IAS 7"
+      ]
+    },
+    {
+      "term_id": "T006_notes_to_the_financial_statements",
+      "lemma_it": "note",
+      "lemma_en": "notes to the financial statements",
+      "aliases_it": [
+        "informativa integrativa"
+      ],
+      "aliases_en": [
+        "notes",
+        "disclosures"
+      ],
+      "definition_it": "Informazioni integrative ai prospetti.",
+      "definition_en": "Supplementary disclosures to the statements.",
+      "domain_tags": [
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IAS 1",
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T007_disclosure",
+      "lemma_it": "informativa",
+      "lemma_en": "disclosure",
+      "aliases_it": [
+        "disclosure requirements"
+      ],
+      "aliases_en": [
+        "disclosure",
+        "note disclosure"
+      ],
+      "definition_it": "Informazioni richieste dagli IFRS.",
+      "definition_en": "Information required by IFRS.",
+      "domain_tags": [
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IFRS 7",
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T008_international_financial_reporting_standa",
+      "lemma_it": "principi contabili internazionali",
+      "lemma_en": "International Financial Reporting Standards",
+      "aliases_it": [
+        "IFRS"
+      ],
+      "aliases_en": [
+        "IFRS"
+      ],
+      "definition_it": "Standard contabili emessi dallo IASB e adottati (in UE tramite endorsement).",
+      "definition_en": "Standards issued by IASB and adopted (in EU via endorsement).",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS"
+      ]
+    },
+    {
+      "term_id": "T009_recognition",
+      "lemma_it": "rilevazione",
+      "lemma_en": "recognition",
+      "aliases_it": [
+        "iscrizione"
+      ],
+      "aliases_en": [
+        "recognition"
+      ],
+      "definition_it": "Iscrizione di un elemento in bilancio quando soddisfa criteri.",
+      "definition_en": "Including an item in the statements when criteria are met.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS Framework"
+      ]
+    },
+    {
+      "term_id": "T010_measurement",
+      "lemma_it": "valutazione",
+      "lemma_en": "measurement",
+      "aliases_it": [
+        "misurazione"
+      ],
+      "aliases_en": [
+        "measurement"
+      ],
+      "definition_it": "Determinazione del valore contabile (costo, fair value, ecc.).",
+      "definition_en": "Determining carrying amounts (cost, fair value, etc.).",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS Framework"
+      ]
+    },
+    {
+      "term_id": "T011_presentation",
+      "lemma_it": "presentazione",
+      "lemma_en": "presentation",
+      "aliases_it": [
+        "esposizione"
+      ],
+      "aliases_en": [
+        "presentation"
+      ],
+      "definition_it": "Modalità di esposizione nei prospetti.",
+      "definition_en": "How information is presented in statements.",
+      "domain_tags": [
+        "presentation"
+      ],
+      "standards_refs": [
+        "IFRS 18",
+        "IAS 1"
+      ]
+    },
+    {
+      "term_id": "T012_accounting_policies",
+      "lemma_it": "politiche contabili",
+      "lemma_en": "accounting policies",
+      "aliases_it": [
+        "criteri contabili"
+      ],
+      "aliases_en": [
+        "accounting policies"
+      ],
+      "definition_it": "Principi specifici adottati dall’entità.",
+      "definition_en": "Specific principles adopted by an entity.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IAS 8",
+        "IFRS 1"
+      ]
+    },
+    {
+      "term_id": "T013_accounting_estimates",
+      "lemma_it": "stime contabili",
+      "lemma_en": "accounting estimates",
+      "aliases_it": [
+        "stime"
+      ],
+      "aliases_en": [
+        "accounting estimates"
+      ],
+      "definition_it": "Valutazioni soggette a incertezza.",
+      "definition_en": "Measurements subject to estimation uncertainty.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IAS 8"
+      ]
+    },
+    {
+      "term_id": "T014_errors",
+      "lemma_it": "errori",
+      "lemma_en": "errors",
+      "aliases_it": [
+        "errori contabili"
+      ],
+      "aliases_en": [
+        "errors"
+      ],
+      "definition_it": "Errori in bilanci precedenti, da correggere secondo IAS 8.",
+      "definition_en": "Errors in prior statements corrected under IAS 8.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IAS 8"
+      ]
+    },
+    {
+      "term_id": "T015_materiality",
+      "lemma_it": "materialità",
+      "lemma_en": "materiality",
+      "aliases_it": [
+        "significatività"
+      ],
+      "aliases_en": [
+        "materiality"
+      ],
+      "definition_it": "Soglia di rilevanza informativa.",
+      "definition_en": "Threshold of information relevance.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS Practice Statement 2"
+      ]
+    },
+    {
+      "term_id": "T016_going_concern",
+      "lemma_it": "continuità aziendale",
+      "lemma_en": "going concern",
+      "aliases_it": [
+        "going concern assumption"
+      ],
+      "aliases_en": [
+        "going concern"
+      ],
+      "definition_it": "Assunzione di continuità dell’attività.",
+      "definition_en": "Assumption that entity continues operations.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IAS 1"
+      ]
+    },
+    {
+      "term_id": "T017_accrual_basis",
+      "lemma_it": "competenza economica",
+      "lemma_en": "accrual basis",
+      "aliases_it": [
+        "principio di competenza"
+      ],
+      "aliases_en": [
+        "accrual basis"
+      ],
+      "definition_it": "Rilevazione per competenza e non per cassa.",
+      "definition_en": "Recognize items when incurred, not when cash moves.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS Framework"
+      ]
+    },
+    {
+      "term_id": "T018_equity",
+      "lemma_it": "patrimonio netto",
+      "lemma_en": "equity",
+      "aliases_it": [
+        "mezzi propri"
+      ],
+      "aliases_en": [
+        "equity"
+      ],
+      "definition_it": "Interesse residuo nelle attività dopo passività.",
+      "definition_en": "Residual interest after liabilities.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IAS 1"
+      ]
+    },
+    {
+      "term_id": "T019_asset",
+      "lemma_it": "attività",
+      "lemma_en": "asset",
+      "aliases_it": [
+        "cespite",
+        "attività aziendali"
+      ],
+      "aliases_en": [
+        "asset"
+      ],
+      "definition_it": "Risorsa controllata che genererà benefici economici futuri.",
+      "definition_en": "Resource controlled expected to produce future benefits.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS Framework"
+      ]
+    },
+    {
+      "term_id": "T020_liability",
+      "lemma_it": "passività",
+      "lemma_en": "liability",
+      "aliases_it": [
+        "debito"
+      ],
+      "aliases_en": [
+        "liability"
+      ],
+      "definition_it": "Obbligazione attuale che comporta deflusso di risorse.",
+      "definition_en": "Present obligation leading to outflow.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS Framework"
+      ]
+    },
+    {
+      "term_id": "T021_revenue",
+      "lemma_it": "ricavi",
+      "lemma_en": "revenue",
+      "aliases_it": [
+        "fatturato"
+      ],
+      "aliases_en": [
+        "revenue"
+      ],
+      "definition_it": "Proventi da attività ordinaria.",
+      "definition_en": "Income from ordinary activities.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS 15"
+      ]
+    },
+    {
+      "term_id": "T022_expenses",
+      "lemma_it": "costi",
+      "lemma_en": "expenses",
+      "aliases_it": [
+        "oneri"
+      ],
+      "aliases_en": [
+        "expenses"
+      ],
+      "definition_it": "Decrementi di benefici economici.",
+      "definition_en": "Decreases in economic benefits.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS Framework"
+      ]
+    },
+    {
+      "term_id": "T023_profit",
+      "lemma_it": "utile",
+      "lemma_en": "profit",
+      "aliases_it": [
+        "risultato positivo"
+      ],
+      "aliases_en": [
+        "profit"
+      ],
+      "definition_it": "Eccedenza di ricavi su costi.",
+      "definition_en": "Excess of income over expenses.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS Framework"
+      ]
+    },
+    {
+      "term_id": "T024_loss",
+      "lemma_it": "perdita",
+      "lemma_en": "loss",
+      "aliases_it": [
+        "risultato negativo"
+      ],
+      "aliases_en": [
+        "loss"
+      ],
+      "definition_it": "Eccedenza di costi su ricavi.",
+      "definition_en": "Excess of expenses over income.",
+      "domain_tags": [
+        "general"
+      ],
+      "standards_refs": [
+        "IFRS Framework"
+      ]
+    },
+    {
+      "term_id": "T025_amortised_cost",
+      "lemma_it": "costo ammortizzato",
+      "lemma_en": "amortised cost",
+      "aliases_it": [
+        "ammortized cost"
+      ],
+      "aliases_en": [
+        "amortized cost"
+      ],
+      "definition_it": "Valutazione di attività/passività finanziarie usando EIR e impairment.",
+      "definition_en": "Measurement using EIR and impairment adjustments.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T026_effective_interest_rate",
+      "lemma_it": "tasso di interesse effettivo",
+      "lemma_en": "effective interest rate",
+      "aliases_it": [
+        "EIR"
+      ],
+      "aliases_en": [
+        "effective interest rate",
+        "EIR"
+      ],
+      "definition_it": "Tasso che attualizza flussi futuri al valore contabile lordo/ammortizzato.",
+      "definition_en": "Rate that discounts future cash flows to gross/amortised cost.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T027_impairment",
+      "lemma_it": "impairment",
+      "lemma_en": "impairment",
+      "aliases_it": [
+        "perdita di valore"
+      ],
+      "aliases_en": [
+        "impairment"
+      ],
+      "definition_it": "Riduzione del valore recuperabile rispetto al valore contabile.",
+      "definition_en": "Reduction when recoverable amount < carrying amount.",
+      "domain_tags": [
+        "impairment"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T028_impairment_test",
+      "lemma_it": "test di impairment",
+      "lemma_en": "impairment test",
+      "aliases_it": [
+        "test di perdita di valore"
+      ],
+      "aliases_en": [
+        "impairment test"
+      ],
+      "definition_it": "Procedura per verificare perdite di valore secondo IAS 36.",
+      "definition_en": "Procedure to assess impairment under IAS 36.",
+      "domain_tags": [
+        "impairment"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T029_recoverable_amount",
+      "lemma_it": "valore recuperabile",
+      "lemma_en": "recoverable amount",
+      "aliases_it": [
+        "recoverable amount"
+      ],
+      "aliases_en": [
+        "recoverable amount"
+      ],
+      "definition_it": "Maggiore tra fair value less costs of disposal e value in use.",
+      "definition_en": "Higher of FVLCOD and VIU.",
+      "domain_tags": [
+        "impairment"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T030_value_in_use",
+      "lemma_it": "valore d’uso",
+      "lemma_en": "value in use",
+      "aliases_it": [
+        "VIU",
+        "value in use"
+      ],
+      "aliases_en": [
+        "value in use",
+        "VIU"
+      ],
+      "definition_it": "Valore attuale dei flussi di cassa futuri attesi dall’uso di un’attività/CGU.",
+      "definition_en": "Present value of expected future cash flows from use of asset/CGU.",
+      "domain_tags": [
+        "impairment",
+        "valuation"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T031_fair_value_less_costs_of_disposal",
+      "lemma_it": "fair value al netto dei costi di dismissione",
+      "lemma_en": "fair value less costs of disposal",
+      "aliases_it": [
+        "FVLCOD"
+      ],
+      "aliases_en": [
+        "fair value less costs of disposal",
+        "FVLCD"
+      ],
+      "definition_it": "Fair value meno costi incrementali di vendita/dismissione.",
+      "definition_en": "Fair value minus incremental disposal costs.",
+      "domain_tags": [
+        "impairment",
+        "fair value"
+      ],
+      "standards_refs": [
+        "IAS 36",
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T032_cash_generating_unit",
+      "lemma_it": "unità generatrice di flussi di cassa",
+      "lemma_en": "cash-generating unit",
+      "aliases_it": [
+        "CGU"
+      ],
+      "aliases_en": [
+        "cash-generating unit",
+        "CGU"
+      ],
+      "definition_it": "Gruppo minimo di attività che genera flussi indipendenti.",
+      "definition_en": "Smallest group of assets generating independent cash inflows.",
+      "domain_tags": [
+        "impairment"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T033_goodwill",
+      "lemma_it": "avviamento",
+      "lemma_en": "goodwill",
+      "aliases_it": [
+        "goodwill"
+      ],
+      "aliases_en": [
+        "goodwill"
+      ],
+      "definition_it": "Eccedenza tra prezzo pagato e fair value netto attività/passività acquisite.",
+      "definition_en": "Excess of consideration over net FV of identifiable assets/liabilities.",
+      "domain_tags": [
+        "business combinations"
+      ],
+      "standards_refs": [
+        "IFRS 3",
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T034_goodwill_impairment",
+      "lemma_it": "perdita di valore dell’avviamento",
+      "lemma_en": "goodwill impairment",
+      "aliases_it": [
+        "impairment goodwill"
+      ],
+      "aliases_en": [
+        "goodwill impairment"
+      ],
+      "definition_it": "Riduzione del valore dell’avviamento allocato alle CGU.",
+      "definition_en": "Impairment of goodwill allocated to CGUs.",
+      "domain_tags": [
+        "impairment"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T035_reversal_of_impairment",
+      "lemma_it": "ripristino di valore",
+      "lemma_en": "reversal of impairment",
+      "aliases_it": [
+        "reversal"
+      ],
+      "aliases_en": [
+        "reversal of impairment"
+      ],
+      "definition_it": "Ripristino di perdite di valore (con limiti) secondo IAS 36.",
+      "definition_en": "Reversal of impairment losses (with limits) under IAS 36.",
+      "domain_tags": [
+        "impairment"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T036_impairment_indicators",
+      "lemma_it": "indicatori di impairment",
+      "lemma_en": "impairment indicators",
+      "aliases_it": [
+        "trigger events"
+      ],
+      "aliases_en": [
+        "indicators",
+        "trigger events"
+      ],
+      "definition_it": "Fatti/circostanze che suggeriscono possibile perdita di valore.",
+      "definition_en": "Facts/circumstances suggesting possible impairment.",
+      "domain_tags": [
+        "impairment"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T037_discount_rate",
+      "lemma_it": "tasso di attualizzazione",
+      "lemma_en": "discount rate",
+      "aliases_it": [
+        "discount rate"
+      ],
+      "aliases_en": [
+        "discount rate"
+      ],
+      "definition_it": "Tasso usato per attualizzare flussi (post-tax secondo IAS 36).",
+      "definition_en": "Rate used to discount cash flows (post-tax per IAS 36).",
+      "domain_tags": [
+        "valuation"
+      ],
+      "standards_refs": [
+        "IAS 36",
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T038_budgets_and_forecasts",
+      "lemma_it": "budget e previsioni",
+      "lemma_en": "budgets and forecasts",
+      "aliases_it": [
+        "piani previsionali"
+      ],
+      "aliases_en": [
+        "budgets",
+        "forecasts"
+      ],
+      "definition_it": "Piani finanziari usati per stimare flussi futuri.",
+      "definition_en": "Plans used to estimate future cash flows.",
+      "domain_tags": [
+        "valuation"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T039_explicit_forecast_period",
+      "lemma_it": "orizzonte esplicito",
+      "lemma_en": "explicit forecast period",
+      "aliases_it": [
+        "periodo esplicito"
+      ],
+      "aliases_en": [
+        "explicit forecast period"
+      ],
+      "definition_it": "Periodo coperto da previsioni dettagliate nel VIU.",
+      "definition_en": "Period covered by detailed forecasts in VIU.",
+      "domain_tags": [
+        "valuation"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T040_terminal_value",
+      "lemma_it": "valore terminale",
+      "lemma_en": "terminal value",
+      "aliases_it": [
+        "TV"
+      ],
+      "aliases_en": [
+        "terminal value",
+        "TV"
+      ],
+      "definition_it": "Valore dei flussi oltre l’orizzonte esplicito.",
+      "definition_en": "Value of cash flows beyond explicit period.",
+      "domain_tags": [
+        "valuation"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T041_terminal_growth_rate",
+      "lemma_it": "tasso di crescita terminale",
+      "lemma_en": "terminal growth rate",
+      "aliases_it": [
+        "g"
+      ],
+      "aliases_en": [
+        "terminal growth rate"
+      ],
+      "definition_it": "Tasso di crescita usato per il valore terminale.",
+      "definition_en": "Growth rate used for terminal value.",
+      "domain_tags": [
+        "valuation"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T042_sensitivity_analysis",
+      "lemma_it": "sensibilità",
+      "lemma_en": "sensitivity analysis",
+      "aliases_it": [
+        "analisi di sensitività"
+      ],
+      "aliases_en": [
+        "sensitivity analysis"
+      ],
+      "definition_it": "Analisi dell’impatto di variazioni nelle assunzioni chiave.",
+      "definition_en": "Impact of changes in key assumptions.",
+      "domain_tags": [
+        "valuation",
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IAS 36",
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T043_key_assumptions",
+      "lemma_it": "assunzioni chiave",
+      "lemma_en": "key assumptions",
+      "aliases_it": [
+        "assunzioni"
+      ],
+      "aliases_en": [
+        "key assumptions"
+      ],
+      "definition_it": "Ipotesi significative (tassi, margini, crescita).",
+      "definition_en": "Significant hypotheses (rates, margins, growth).",
+      "domain_tags": [
+        "valuation"
+      ],
+      "standards_refs": [
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T044_estimation_uncertainty",
+      "lemma_it": "incertezza delle stime",
+      "lemma_en": "estimation uncertainty",
+      "aliases_it": [
+        "uncertainty"
+      ],
+      "aliases_en": [
+        "estimation uncertainty"
+      ],
+      "definition_it": "Incertezza insita nelle stime contabili e di fair value.",
+      "definition_en": "Uncertainty inherent in estimates and fair value.",
+      "domain_tags": [
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IAS 1",
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T045_fair_value",
+      "lemma_it": "fair value",
+      "lemma_en": "fair value",
+      "aliases_it": [
+        "valore equo"
+      ],
+      "aliases_en": [
+        "fair value"
+      ],
+      "definition_it": "Prezzo che sarebbe ricevuto per vendere un’attività o pagato per trasferire una passività in una transazione ordinata tra partecipanti di mercato alla data di valutazione.",
+      "definition_en": "Price to sell an asset or transfer a liability in an orderly transaction between market participants at measurement date.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T046_orderly_transaction",
+      "lemma_it": "transazione ordinata",
+      "lemma_en": "orderly transaction",
+      "aliases_it": [
+        "orderly transaction"
+      ],
+      "aliases_en": [
+        "orderly transaction"
+      ],
+      "definition_it": "Transazione non forzata, con esposizione adeguata al mercato.",
+      "definition_en": "Non-forced transaction with adequate market exposure.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T047_market_participants",
+      "lemma_it": "partecipanti di mercato",
+      "lemma_en": "market participants",
+      "aliases_it": [
+        "market participants"
+      ],
+      "aliases_en": [
+        "market participants"
+      ],
+      "definition_it": "Acquirenti/venditori indipendenti, informati e disposti.",
+      "definition_en": "Independent, knowledgeable, willing buyers/sellers.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T048_highest_and_best_use",
+      "lemma_it": "uso massimo e migliore",
+      "lemma_en": "highest and best use",
+      "aliases_it": [
+        "HBU"
+      ],
+      "aliases_en": [
+        "highest and best use",
+        "HBU"
+      ],
+      "definition_it": "Uso dell’attività che massimizza il valore per partecipanti di mercato.",
+      "definition_en": "Use that maximises value to market participants.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T049_principal_market",
+      "lemma_it": "mercato principale",
+      "lemma_en": "principal market",
+      "aliases_it": [
+        "principal market"
+      ],
+      "aliases_en": [
+        "principal market"
+      ],
+      "definition_it": "Mercato con maggior volume e attività per l’attività/passività.",
+      "definition_en": "Market with greatest volume and activity.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T050_most_advantageous_market",
+      "lemma_it": "mercato più vantaggioso",
+      "lemma_en": "most advantageous market",
+      "aliases_it": [
+        "most advantageous market"
+      ],
+      "aliases_en": [
+        "most advantageous market"
+      ],
+      "definition_it": "Mercato che massimizza l’importo ricevibile al netto costi.",
+      "definition_en": "Market maximizing net proceeds.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T051_valuation_techniques",
+      "lemma_it": "tecniche di valutazione",
+      "lemma_en": "valuation techniques",
+      "aliases_it": [
+        "metodi di valutazione"
+      ],
+      "aliases_en": [
+        "valuation techniques"
+      ],
+      "definition_it": "Approcci di mercato, reddito, costo per stimare fair value.",
+      "definition_en": "Market, income, cost approaches to estimate fair value.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T052_market_approach",
+      "lemma_it": "approccio di mercato",
+      "lemma_en": "market approach",
+      "aliases_it": [
+        "market method"
+      ],
+      "aliases_en": [
+        "market approach"
+      ],
+      "definition_it": "Valutazione basata su prezzi e informazioni di mercato.",
+      "definition_en": "Valuation using market prices and information.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T053_income_approach",
+      "lemma_it": "approccio reddituale",
+      "lemma_en": "income approach",
+      "aliases_it": [
+        "DCF"
+      ],
+      "aliases_en": [
+        "income approach"
+      ],
+      "definition_it": "Valutazione basata su flussi attualizzati o tecniche reddituali.",
+      "definition_en": "Valuation using discounted cash flows or income methods.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13",
+        "IAS 36"
+      ]
+    },
+    {
+      "term_id": "T054_cost_approach",
+      "lemma_it": "approccio del costo",
+      "lemma_en": "cost approach",
+      "aliases_it": [
+        "replacement cost"
+      ],
+      "aliases_en": [
+        "cost approach"
+      ],
+      "definition_it": "Valutazione basata sul costo di sostituzione attuale.",
+      "definition_en": "Valuation based on current replacement cost.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T055_observable_inputs",
+      "lemma_it": "input osservabili",
+      "lemma_en": "observable inputs",
+      "aliases_it": [
+        "input di mercato"
+      ],
+      "aliases_en": [
+        "observable inputs"
+      ],
+      "definition_it": "Dati di mercato disponibili e verificabili.",
+      "definition_en": "Market-based inputs that are available and verifiable.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T056_unobservable_inputs",
+      "lemma_it": "input non osservabili",
+      "lemma_en": "unobservable inputs",
+      "aliases_it": [
+        "input non osservabili"
+      ],
+      "aliases_en": [
+        "unobservable inputs"
+      ],
+      "definition_it": "Assunzioni interne quando mancano dati di mercato.",
+      "definition_en": "Entity assumptions when market data not available.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T057_fair_value_hierarchy",
+      "lemma_it": "gerarchia del fair value",
+      "lemma_en": "fair value hierarchy",
+      "aliases_it": [
+        "gerarchia fair value"
+      ],
+      "aliases_en": [
+        "fair value hierarchy"
+      ],
+      "definition_it": "Classificazione degli input in livelli 1,2,3.",
+      "definition_en": "Classification of inputs into Levels 1,2,3.",
+      "domain_tags": [
+        "fair value",
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T058_level_1",
+      "lemma_it": "livello 1",
+      "lemma_en": "Level 1",
+      "aliases_it": [
+        "Level 1"
+      ],
+      "aliases_en": [
+        "Level 1"
+      ],
+      "definition_it": "Prezzi quotati in mercati attivi per attività identiche.",
+      "definition_en": "Quoted prices in active markets for identical items.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T059_level_2",
+      "lemma_it": "livello 2",
+      "lemma_en": "Level 2",
+      "aliases_it": [
+        "Level 2"
+      ],
+      "aliases_en": [
+        "Level 2"
+      ],
+      "definition_it": "Input osservabili diversi dai prezzi Level 1.",
+      "definition_en": "Observable inputs other than Level 1 prices.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T060_level_3",
+      "lemma_it": "livello 3",
+      "lemma_en": "Level 3",
+      "aliases_it": [
+        "Level 3"
+      ],
+      "aliases_en": [
+        "Level 3"
+      ],
+      "definition_it": "Input non osservabili significativi.",
+      "definition_en": "Significant unobservable inputs.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T061_transfers_between_levels",
+      "lemma_it": "transfer tra livelli",
+      "lemma_en": "transfers between levels",
+      "aliases_it": [
+        "trasferimenti tra livelli"
+      ],
+      "aliases_en": [
+        "transfers between levels"
+      ],
+      "definition_it": "Riclassifiche nella gerarchia fair value.",
+      "definition_en": "Reclassifications within fair value hierarchy.",
+      "domain_tags": [
+        "fair value",
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T062_unit_of_account",
+      "lemma_it": "unità di conto",
+      "lemma_en": "unit of account",
+      "aliases_it": [
+        "unit of account"
+      ],
+      "aliases_en": [
+        "unit of account"
+      ],
+      "definition_it": "Livello al quale un’attività/passività è aggregata o disaggregata per misurazione.",
+      "definition_en": "Level at which an item is aggregated/disaggregated for measurement.",
+      "domain_tags": [
+        "fair value"
+      ],
+      "standards_refs": [
+        "IFRS 13"
+      ]
+    },
+    {
+      "term_id": "T063_ifrs_9",
+      "lemma_it": "IFRS 9",
+      "lemma_en": "IFRS 9",
+      "aliases_it": [
+        "strumenti finanziari"
+      ],
+      "aliases_en": [
+        "financial instruments"
+      ],
+      "definition_it": "Standard su classificazione, valutazione, impairment e hedge accounting.",
+      "definition_en": "Standard on classification, measurement, impairment and hedge accounting.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T064_classification_and_measurement",
+      "lemma_it": "classificazione e valutazione",
+      "lemma_en": "classification and measurement",
+      "aliases_it": [
+        "C&M"
+      ],
+      "aliases_en": [
+        "classification and measurement",
+        "C&M"
+      ],
+      "definition_it": "Regole IFRS 9 per classificare attività finanziarie (AC/FVOCI/FVTPL).",
+      "definition_en": "IFRS 9 rules to classify financial assets (AC/FVOCI/FVTPL).",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T065_business_model",
+      "lemma_it": "modello di business",
+      "lemma_en": "business model",
+      "aliases_it": [
+        "business model"
+      ],
+      "aliases_en": [
+        "business model"
+      ],
+      "definition_it": "Modello di gestione delle attività finanziarie per fini IFRS 9.",
+      "definition_en": "How financial assets are managed for IFRS 9.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T066_sppi_test",
+      "lemma_it": "test SPPI",
+      "lemma_en": "SPPI test",
+      "aliases_it": [
+        "solo pagamenti di capitale e interessi"
+      ],
+      "aliases_en": [
+        "SPPI test"
+      ],
+      "definition_it": "Test per verificare che i flussi siano solo principal e interest.",
+      "definition_en": "Test that cash flows are solely payments of principal and interest.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T067_fvoci",
+      "lemma_it": "FVOCI",
+      "lemma_en": "FVOCI",
+      "aliases_it": [
+        "fair value attraverso OCI"
+      ],
+      "aliases_en": [
+        "FVOCI"
+      ],
+      "definition_it": "Fair value con variazioni in OCI (alcune categorie).",
+      "definition_en": "Fair value with changes in OCI (certain categories).",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T068_fvtpl",
+      "lemma_it": "FVTPL",
+      "lemma_en": "FVTPL",
+      "aliases_it": [
+        "fair value a conto economico"
+      ],
+      "aliases_en": [
+        "FVTPL"
+      ],
+      "definition_it": "Fair value con variazioni a conto economico.",
+      "definition_en": "Fair value with changes in profit or loss.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T069_fair_value_option",
+      "lemma_it": "designazione al fair value",
+      "lemma_en": "fair value option",
+      "aliases_it": [
+        "FVO"
+      ],
+      "aliases_en": [
+        "fair value option",
+        "FVO"
+      ],
+      "definition_it": "Opzione di designare al fair value per ridurre accounting mismatch.",
+      "definition_en": "Option to designate at fair value to reduce mismatch.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T070_ifrs_9_impairment",
+      "lemma_it": "impairment IFRS 9",
+      "lemma_en": "IFRS 9 impairment",
+      "aliases_it": [
+        "perdite attese"
+      ],
+      "aliases_en": [
+        "expected credit losses"
+      ],
+      "definition_it": "Modello ECL per perdite su attività finanziarie.",
+      "definition_en": "ECL model for credit losses on financial assets.",
+      "domain_tags": [
+        "financial instruments",
+        "impairment"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T071_expected_credit_losses",
+      "lemma_it": "perdite attese su crediti",
+      "lemma_en": "expected credit losses",
+      "aliases_it": [
+        "ECL",
+        "expected loss"
+      ],
+      "aliases_en": [
+        "ECL",
+        "expected credit loss"
+      ],
+      "definition_it": "Stima probabilistica delle perdite di credito attese.",
+      "definition_en": "Probability-weighted estimate of credit losses.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T072_three_stage_model",
+      "lemma_it": "modello a tre stadi",
+      "lemma_en": "three-stage model",
+      "aliases_it": [
+        "stage 1/2/3"
+      ],
+      "aliases_en": [
+        "three-stage model"
+      ],
+      "definition_it": "Allocazione per incremento significativo del rischio di credito e default.",
+      "definition_en": "Allocation based on significant increase in credit risk and default.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T073_significant_increase_in_credit_risk",
+      "lemma_it": "incremento significativo del rischio di credito",
+      "lemma_en": "significant increase in credit risk",
+      "aliases_it": [
+        "SICR"
+      ],
+      "aliases_en": [
+        "significant increase in credit risk",
+        "SICR"
+      ],
+      "definition_it": "Criterio per passaggio da Stage 1 a Stage 2.",
+      "definition_en": "Criterion for moving from Stage 1 to Stage 2.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T074_stage_1",
+      "lemma_it": "Stage 1",
+      "lemma_en": "Stage 1",
+      "aliases_it": [
+        "stage1"
+      ],
+      "aliases_en": [
+        "Stage 1"
+      ],
+      "definition_it": "ECL a 12 mesi per strumenti senza SICR.",
+      "definition_en": "12-month ECL for instruments without SICR.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T075_stage_2",
+      "lemma_it": "Stage 2",
+      "lemma_en": "Stage 2",
+      "aliases_it": [
+        "stage2"
+      ],
+      "aliases_en": [
+        "Stage 2"
+      ],
+      "definition_it": "ECL lifetime per strumenti con SICR.",
+      "definition_en": "Lifetime ECL for instruments with SICR.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T076_stage_3",
+      "lemma_it": "Stage 3",
+      "lemma_en": "Stage 3",
+      "aliases_it": [
+        "stage3",
+        "credit-impaired"
+      ],
+      "aliases_en": [
+        "Stage 3",
+        "credit-impaired"
+      ],
+      "definition_it": "Strumenti credit-impaired; interessi su base netta (secondo IFRS 9).",
+      "definition_en": "Credit-impaired assets; interest on net basis (per IFRS 9).",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T077_12_month_ecl",
+      "lemma_it": "ECL a 12 mesi",
+      "lemma_en": "12-month ECL",
+      "aliases_it": [
+        "12m ECL"
+      ],
+      "aliases_en": [
+        "12-month ECL"
+      ],
+      "definition_it": "Perdita attesa da default possibili nei successivi 12 mesi.",
+      "definition_en": "Expected losses from defaults within next 12 months.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T078_lifetime_ecl",
+      "lemma_it": "ECL lifetime",
+      "lemma_en": "lifetime ECL",
+      "aliases_it": [
+        "LT ECL"
+      ],
+      "aliases_en": [
+        "lifetime ECL"
+      ],
+      "definition_it": "Perdita attesa da default lungo la vita residua.",
+      "definition_en": "Expected losses over the remaining life.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T079_probability_of_default",
+      "lemma_it": "probabilità di default",
+      "lemma_en": "probability of default",
+      "aliases_it": [
+        "PD"
+      ],
+      "aliases_en": [
+        "probability of default",
+        "PD"
+      ],
+      "definition_it": "Probabilità che il debitore vada in default.",
+      "definition_en": "Likelihood of default.",
+      "domain_tags": [
+        "risk"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T080_loss_given_default",
+      "lemma_it": "loss given default",
+      "lemma_en": "loss given default",
+      "aliases_it": [
+        "LGD"
+      ],
+      "aliases_en": [
+        "loss given default",
+        "LGD"
+      ],
+      "definition_it": "Quota di esposizione persa in caso di default.",
+      "definition_en": "Portion of exposure lost if default occurs.",
+      "domain_tags": [
+        "risk"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T081_exposure_at_default",
+      "lemma_it": "esposizione al default",
+      "lemma_en": "exposure at default",
+      "aliases_it": [
+        "EAD"
+      ],
+      "aliases_en": [
+        "exposure at default",
+        "EAD"
+      ],
+      "definition_it": "Ammontare esposto al momento del default.",
+      "definition_en": "Amount exposed at time of default.",
+      "domain_tags": [
+        "risk"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T082_write_off",
+      "lemma_it": "write-off",
+      "lemma_en": "write-off",
+      "aliases_it": [
+        "stralcio"
+      ],
+      "aliases_en": [
+        "write-off"
+      ],
+      "definition_it": "Eliminazione contabile quando non c’è ragionevole aspettativa di recupero.",
+      "definition_en": "Derecognition when no reasonable expectation of recovery.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T083_modification",
+      "lemma_it": "modifiche contrattuali",
+      "lemma_en": "modification",
+      "aliases_it": [
+        "modifica contrattuale"
+      ],
+      "aliases_en": [
+        "modification"
+      ],
+      "definition_it": "Modifiche ai flussi contrattuali e relativo trattamento contabile.",
+      "definition_en": "Changes to contractual cash flows and accounting treatment.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T084_derecognition",
+      "lemma_it": "derecognition",
+      "lemma_en": "derecognition",
+      "aliases_it": [
+        "cancellazione"
+      ],
+      "aliases_en": [
+        "derecognition"
+      ],
+      "definition_it": "Eliminazione di attività/passività finanziarie dal bilancio.",
+      "definition_en": "Removal of financial asset/liability from statements.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T085_hedge_accounting",
+      "lemma_it": "hedge accounting",
+      "lemma_en": "hedge accounting",
+      "aliases_it": [
+        "copertura contabile"
+      ],
+      "aliases_en": [
+        "hedge accounting"
+      ],
+      "definition_it": "Regole per contabilizzazione delle coperture.",
+      "definition_en": "Accounting for hedging relationships.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T086_hedging_instrument",
+      "lemma_it": "strumento di copertura",
+      "lemma_en": "hedging instrument",
+      "aliases_it": [
+        "derivato di copertura"
+      ],
+      "aliases_en": [
+        "hedging instrument"
+      ],
+      "definition_it": "Strumento designato per coprire rischio.",
+      "definition_en": "Instrument designated to hedge risk.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T087_hedged_item",
+      "lemma_it": "elemento coperto",
+      "lemma_en": "hedged item",
+      "aliases_it": [
+        "item coperto"
+      ],
+      "aliases_en": [
+        "hedged item"
+      ],
+      "definition_it": "Voce il cui rischio è coperto.",
+      "definition_en": "Item whose risk is being hedged.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T088_hedge_effectiveness",
+      "lemma_it": "efficacia della copertura",
+      "lemma_en": "hedge effectiveness",
+      "aliases_it": [
+        "effectiveness"
+      ],
+      "aliases_en": [
+        "hedge effectiveness"
+      ],
+      "definition_it": "Misura della compensazione tra item coperto e strumento di copertura.",
+      "definition_en": "Degree of offset between hedged item and hedging instrument.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T089_risk_management_objective",
+      "lemma_it": "risk management objective",
+      "lemma_en": "risk management objective",
+      "aliases_it": [
+        "obiettivo di gestione del rischio"
+      ],
+      "aliases_en": [
+        "risk management objective"
+      ],
+      "definition_it": "Obiettivo di gestione rischio per designazione copertura.",
+      "definition_en": "Risk management objective for hedge designation.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9"
+      ]
+    },
+    {
+      "term_id": "T090_ifrs_7",
+      "lemma_it": "IFRS 7",
+      "lemma_en": "IFRS 7",
+      "aliases_it": [
+        "informativa strumenti finanziari"
+      ],
+      "aliases_en": [
+        "financial instruments disclosures"
+      ],
+      "definition_it": "Standard sulle disclosure per strumenti finanziari e rischi.",
+      "definition_en": "Standard on disclosures for financial instruments and risks.",
+      "domain_tags": [
+        "disclosure",
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T091_credit_risk",
+      "lemma_it": "rischio di credito",
+      "lemma_en": "credit risk",
+      "aliases_it": [
+        "rischio credito"
+      ],
+      "aliases_en": [
+        "credit risk"
+      ],
+      "definition_it": "Rischio di perdita per inadempimento della controparte.",
+      "definition_en": "Risk of loss from counterparty default.",
+      "domain_tags": [
+        "risk",
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T092_liquidity_risk",
+      "lemma_it": "rischio di liquidità",
+      "lemma_en": "liquidity risk",
+      "aliases_it": [
+        "liquidity risk"
+      ],
+      "aliases_en": [
+        "liquidity risk"
+      ],
+      "definition_it": "Rischio di non poter far fronte a obbligazioni in scadenza.",
+      "definition_en": "Risk of inability to meet due obligations.",
+      "domain_tags": [
+        "risk",
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T093_market_risk",
+      "lemma_it": "rischio di mercato",
+      "lemma_en": "market risk",
+      "aliases_it": [
+        "market risk"
+      ],
+      "aliases_en": [
+        "market risk"
+      ],
+      "definition_it": "Rischio da variazioni di tassi, cambi, prezzi.",
+      "definition_en": "Risk from changes in rates, FX, prices.",
+      "domain_tags": [
+        "risk",
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T094_maturity_analysis",
+      "lemma_it": "analisi di scadenza",
+      "lemma_en": "maturity analysis",
+      "aliases_it": [
+        "maturity table"
+      ],
+      "aliases_en": [
+        "maturity analysis"
+      ],
+      "definition_it": "Tabella dei flussi contrattuali e scadenze (liquidity risk).",
+      "definition_en": "Table of contractual cash flows and maturities.",
+      "domain_tags": [
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T095_market_risk_sensitivity",
+      "lemma_it": "sensibilità al rischio di mercato",
+      "lemma_en": "market risk sensitivity",
+      "aliases_it": [
+        "sensitivity market risk"
+      ],
+      "aliases_en": [
+        "market risk sensitivity"
+      ],
+      "definition_it": "Analisi di sensitività (tassi/cambi) richiesta da IFRS 7.",
+      "definition_en": "Sensitivity analysis for market risk required by IFRS 7.",
+      "domain_tags": [
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T096_gross_carrying_amount",
+      "lemma_it": "valore contabile lordo",
+      "lemma_en": "gross carrying amount",
+      "aliases_it": [
+        "GCA"
+      ],
+      "aliases_en": [
+        "gross carrying amount",
+        "GCA"
+      ],
+      "definition_it": "Valore contabile prima della rettifica ECL.",
+      "definition_en": "Carrying amount before loss allowance.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9",
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T097_loss_allowance",
+      "lemma_it": "rettifica di valore",
+      "lemma_en": "loss allowance",
+      "aliases_it": [
+        "fondo svalutazione"
+      ],
+      "aliases_en": [
+        "loss allowance"
+      ],
+      "definition_it": "Accantonamento per ECL (loss allowance).",
+      "definition_en": "Allowance for ECL.",
+      "domain_tags": [
+        "financial instruments"
+      ],
+      "standards_refs": [
+        "IFRS 9",
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T098_ecl_disclosures",
+      "lemma_it": "informativa ECL",
+      "lemma_en": "ECL disclosures",
+      "aliases_it": [
+        "disclosure ECL"
+      ],
+      "aliases_en": [
+        "ECL disclosures"
+      ],
+      "definition_it": "Disclosure su assunzioni e riconciliazioni ECL.",
+      "definition_en": "Disclosures on assumptions and reconciliations for ECL.",
+      "domain_tags": [
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T099_supplier_finance_arrangements",
+      "lemma_it": "supplier finance arrangements",
+      "lemma_en": "supplier finance arrangements",
+      "aliases_it": [
+        "accordi di finanziamento fornitori",
+        "reverse factoring"
+      ],
+      "aliases_en": [
+        "supplier finance arrangements",
+        "reverse factoring"
+      ],
+      "definition_it": "Schemi di finanziamento della supply chain con obblighi di disclosure (IAS 7/IFRS 7).",
+      "definition_en": "Supply chain finance arrangements with disclosure requirements (IAS 7/IFRS 7).",
+      "domain_tags": [
+        "disclosure"
+      ],
+      "standards_refs": [
+        "IAS 7",
+        "IFRS 7"
+      ]
+    },
+    {
+      "term_id": "T100_ifrs_1",
+      "lemma_it": "IFRS 1",
+      "lemma_en": "IFRS 1",
+      "aliases_it": [
+        "prima adozione"
+      ],
+      "aliases_en": [
+        "first-time adoption"
+      ],
+      "definition_it": "Standard per la prima adozione degli IFRS.",
+      "definition_en": "Standard for first-time adoption of IFRS.",
+      "domain_tags": [
+        "transition"
+      ],
+      "standards_refs": [
+        "IFRS 1"
+      ]
+    }
+  ]
+}
