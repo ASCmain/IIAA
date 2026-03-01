@@ -1,0 +1,40 @@
+# IIAA routing config (v0.2) — machine-readable (YAML)
+query_language_detection:
+  thresholds:
+    dominant_ratio: 1.3
+  short_query_tokens: 6
+
+language_mix:
+  it: {it: 0.85, en: 0.15}
+  en: {en: 0.85, it: 0.15}
+  mixed: {it: 0.55, en: 0.45}
+  auto_short: {it: 0.50, en: 0.50}
+
+retrieval:
+  passes:
+    - name: binding-first
+      top_k: 8
+      authority_level: [binding_text, endorsed_standard]
+      source_tier: [1, 2, 3]
+    - name: context
+      top_k: 12
+      authority_level: [consolidated_reference, non_binding_guidance, commentary]
+      source_tier: [2, 3, 4, 5]
+
+adaptive_expansion:
+  min_evidence: 6
+  min_unique_doc_family: 3
+  secondary_lang_weight: 0.30
+  expand_source_tier_to: [3, 4, 5]
+
+dedup:
+  doc_family: true
+  chunk_hash: true
+
+response:
+  precedence:
+    - authority_level: binding_text
+    - authority_level: endorsed_standard
+    - authority_level: consolidated_reference
+    - authority_level: non_binding_guidance
+    - authority_level: commentary
