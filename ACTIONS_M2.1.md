@@ -2,12 +2,20 @@
 
 .env: .env.corpus
 
-## Comandi eseguiti
-- creato layout: data/sources, data/glossary, docs/specs
-- aggiunti e committati: sorgenti EUR-Lex + spec HTML-first
-- aggiunti e committati: schema metadati + routing + parsing spec v0.3
-- aggiunto e committato: glossario seed 100 termini (IT/EN)
+## Obiettivo
+Versionare sorgenti, spec tecniche e glossario seed per avviare M2 (HTML-first EU-Lex).
 
-## Output / stato
-- Root del repo ripulita dagli untracked iniziali.
-- Documentazione e dataset di supporto versionati.
+## Comandi eseguiti (sintesi)
+- git switch -c feat/html-first-ingestion-m2
+- mkdir -p data/sources data/glossary docs/specs
+- mv file dalla root verso:
+  - data/sources/
+  - docs/specs/
+  - data/glossary/
+- git add/commit:
+  - docs(corpus): eur-lex sources list + parsing spec html-first
+  - docs(specs): metadata schema + routing rules + parsing spec v0.3
+  - feat(glossary): seed bilingual IFRS glossary (100 terms)
+
+## Stato finale
+- git status: clean
