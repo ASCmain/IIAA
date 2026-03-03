@@ -27,6 +27,16 @@ def dump_json(path: Path, obj: Any) -> None:
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def format_citation(meta: dict, chunk_id: str | None = None) -> str:
+    std = (meta or {}).get("standard_id") or ""
+    para = (meta or {}).get("para_key") or ""
+    cite_key = (meta or {}).get("cite_key") or ""
+    if std and para:
+        return f"{std} para {para}"
+    if cite_key:
+        return cite_key
+    return chunk_id or ""
+
 def main() -> None:
     st.set_page_config(page_title="IIAA — Project Work UI", layout="wide")
     st.title("IIAA — Project Work UI (EUR-Lex consolidated)")

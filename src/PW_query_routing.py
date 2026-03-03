@@ -133,39 +133,43 @@ Now produce:
 def retrieve(
     qdrant_client: QdrantClient,
     collection: str,
-    embed_vector: List[float],
-    top_k: int = 8,
-    score_threshold: float = 0.0,
+    query_vector: List[float],
+    top_k: int,
+    score_threshold: float,
+    query_filter: Optional[models.Filter] = None,
 ) -> List[Evidence]:
-    hits = qdrant_client.search(
+    """Vector retrieval against Qdrant.
+
+    Note: recent qdrant-client versions replaced `client.search(...)` with the universal
+    `client.query_points(...)`. We use `query_points` for compatibility with the
+    version installed in this project.
+    """
+    # qdrant-client >= 1.x: universal query endpoint
+    resp = qdrant_client.query_points(
         collection_name=collection,
-        query_vector=embed_vector,
+        query=query_vector,
         limit=int(top_k),
-        score_threshold=float(score_threshold) if score_threshold else None,
         with_payload=True,
+        with_vectors=False,
+        score_threshold=float(score_threshold) if score_threshold is not None else None,
+        query_filter=query_filter,
     )
 
-    out: List[Evidence] = []
-    for h in hits:
-        payload = h.payload or {}
-        text = (payload.get("text") or "").strip()
-        if not text:
-            continue
+    # The response is QueryResponse with `.points`; older variants may return list-like.
+    points = getattr(resp, "points", resp)
 
-        out.append(
+    evidences: List[Evidence] = []
+    for p in points:
+        payload = getattr(p, "payload", None) or {}
+        evidences.append(
             Evidence(
-                point_id=str(h.id),
-                score=float(h.score),
-                text=text,
-                source=str(payload.get("source") or payload.get("source_url") or payload.get("doc_id") or ""),
-                cite_key=(payload.get("cite_key") or payload.get("meta", {}).get("cite_key")),
-                standard_id=(payload.get("standard_id") or payload.get("meta", {}).get("standard_id")),
-                para_key=(payload.get("para_key") or payload.get("meta", {}).get("para_key")),
-                section_path=(payload.get("section_path") or payload.get("meta", {}).get("section_path")),
+                id=str(getattr(p, "id", "")),
+                score=float(getattr(p, "score", 0.0)),
+                payload=payload,
+                text=str(payload.get("text") or ""),
             )
         )
-    return out
-
+    return evidences
 
 def run_query(
     query: str,
