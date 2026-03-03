@@ -13,8 +13,7 @@ import argparse
 import json
 from collections import Counter
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional
 
 from src.ingestion.deterministic import sha256_text
 from src.parse.eurlex_html import TextBlock
@@ -54,6 +53,57 @@ def compact_std(std: str) -> str:
     return std.replace(" ", "")
 
 
+def split_text_deterministic(text: str, max_chars: int, overlap: int) -> List[str]:
+    """
+    Deterministically split a long paragraph into multiple parts with optional overlap.
+    We try to cut on whitespace near the end of each window to avoid mid-word splits.
+    """
+    t = (text or "").strip()
+    if not t:
+        return []
+    if max_chars <= 0 or len(t) <= max_chars:
+        return [t]
+
+    overlap = max(0, int(overlap or 0))
+    step = max(1, max_chars - overlap)
+
+    parts: List[str] = []
+    n = len(t)
+    start = 0
+
+    # We search for a "nice cut" up to 200 chars backwards from the window end.
+    back_window = 200
+
+    while start < n:
+        end = min(n, start + max_chars)
+        cut = end
+
+        if end < n:
+            back = max(start + 1, end - back_window)
+            window = t[back:end]
+            idx = max(window.rfind(" "), window.rfind("\n"), window.rfind("\t"))
+            if idx != -1:
+                cut = back + idx
+
+        part = t[start:cut].strip()
+        if part:
+            parts.append(part)
+
+        if end >= n:
+            break
+
+        # next start with overlap
+        start = max(0, cut - overlap)
+
+        # safety guard (should not happen, but prevents infinite loops)
+        if cut <= 0 and start == 0:
+            start = end
+        if step <= 0:
+            start = end
+
+    return parts
+
+
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser()
     ap.add_argument("--in-jsonl", required=True, help="Normalized EUR-Lex HTML JSONL (one doc)")
@@ -61,6 +111,18 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--out", required=True, help="Output chunks jsonl")
     ap.add_argument("--limit", type=int, default=0, help="Limit chunks for test (0=all)")
     ap.add_argument("--progress-every", type=int, default=0, help="Progress print every N blocks (0=off)")
+    ap.add_argument(
+        "--max-chars",
+        type=int,
+        default=6000,
+        help="Max characters per chunk; oversized paragraphs are split deterministically",
+    )
+    ap.add_argument(
+        "--overlap",
+        type=int,
+        default=200,
+        help="Overlap chars between split parts (only when splitting)",
+    )
     return ap.parse_args()
 
 
@@ -89,7 +151,13 @@ def main() -> int:
     step = "m2_build_chunks_ifrs_paragraphs"
     rec = TelemetryRecorder(step=step)
     rec.start(
-        inputs={"in": str(inp), "out": str(outp), "sources": args.sources},
+        inputs={
+            "in": str(inp),
+            "out": str(outp),
+            "sources": args.sources,
+            "max_chars": int(args.max_chars),
+            "overlap": int(args.overlap),
+        },
         extra={"doc_id": doc_id, "lang": lang, "run_id": utc_run_id()},
     )
 
@@ -139,23 +207,16 @@ def main() -> int:
     with rec.span("extract_standard_paragraphs", blocks=len(blocks)):
         extracted = extract_standard_paragraphs(blocks)
 
-    counts = {k: len(v) for k, v in extracted.items()}
-    total_paras = sum(counts.values())
-
-    if args.limit and total_paras > args.limit:
-        total_target = args.limit
-    else:
-        total_target = total_paras
-
+    # stats counters
     std_counter = Counter()
     max_len = 0
-    max_len_std = None
-    max_len_key = None
+    max_len_std: Optional[str] = None
+    max_len_key: Optional[str] = None
 
     chunk_index = 0
     written = 0
 
-    with rec.span("write_chunks", standards=len(extracted), paragraphs_total=total_target):
+    with rec.span("write_chunks", standards=len(extracted)):
         with outp.open("a", encoding="utf-8") as fout:
             for std in sorted(extracted.keys()):
                 paras = extracted.get(std) or []
@@ -163,37 +224,58 @@ def main() -> int:
                     if args.limit and written >= args.limit:
                         break
 
-                    text = (p.text or "").strip()
-                    if not text:
+                    base_text = (p.text or "").strip()
+                    if not base_text:
                         continue
 
-                    para_key = p.key
-                    cite_key = f"{compact_std(std)}:{para_key}"
+                    para_key_base = p.key
+                    parts = split_text_deterministic(base_text, args.max_chars, args.overlap)
+                    if not parts:
+                        continue
 
-                    chunk_sha = sha256_text(text)
+                    part_count = len(parts)
+                    for part_i, part_text in enumerate(parts, start=1):
+                        if args.limit and written >= args.limit:
+                            break
 
-                    std_counter[std] += 1
-                    if len(text) > max_len:
-                        max_len = len(text)
-                        max_len_std = std
-                        max_len_key = para_key
+                        # Make keys stable + unique when split happens
+                        if part_count == 1:
+                            para_key = para_key_base
+                            para_part = None
+                            para_parts = None
+                        else:
+                            para_key = f"{para_key_base}#{part_i}"
+                            para_part = part_i
+                            para_parts = part_count
 
-                    payload = {
-                        **base,
-                        "page": 0,
-                        "standard_id": std,
-                        "standard_codes": [std],
-                        "para_key": para_key,
-                        "cite_key": cite_key,
-                        "section_path": getattr(p, "section_path", None),
-                        "chunk_index": chunk_index,
-                        "chunk_sha256": chunk_sha,
-                        "text": text,
-                    }
+                        cite_key = f"{compact_std(std)}:{para_key}"
+                        chunk_sha = sha256_text(part_text)
 
-                    fout.write(json.dumps(payload, ensure_ascii=False) + "\n")
-                    chunk_index += 1
-                    written += 1
+                        std_counter[std] += 1
+                        if len(part_text) > max_len:
+                            max_len = len(part_text)
+                            max_len_std = std
+                            max_len_key = para_key
+
+                        payload = {
+                            **base,
+                            "page": 0,
+                            "standard_id": std,
+                            "standard_codes": [std],
+                            "para_key": para_key,
+                            "para_key_base": para_key_base,
+                            "para_part": para_part,
+                            "para_parts": para_parts,
+                            "cite_key": cite_key,
+                            "section_path": getattr(p, "section_path", None),
+                            "chunk_index": chunk_index,
+                            "chunk_sha256": chunk_sha,
+                            "text": part_text,
+                        }
+
+                        fout.write(json.dumps(payload, ensure_ascii=False) + "\n")
+                        chunk_index += 1
+                        written += 1
 
                 if args.limit and written >= args.limit:
                     break
@@ -204,8 +286,10 @@ def main() -> int:
         "standards_extracted": len(extracted),
         "paragraphs_total": written,
         "top_20_standards": sorted(((k, v) for k, v in std_counter.items()), key=lambda x: x[1], reverse=True)[:20],
-        "max_paragraph_len": max_len,
-        "max_paragraph_ref": {"standard_id": max_len_std, "para_key": max_len_key},
+        "max_chunk_len": max_len,
+        "max_chunk_ref": {"standard_id": max_len_std, "para_key": max_len_key},
+        "max_chars": int(args.max_chars),
+        "overlap": int(args.overlap),
     }
 
     rec.finalize(outputs={"chunks_written": written, "out": str(outp), "doc_id": doc_id, "stats": stats})
