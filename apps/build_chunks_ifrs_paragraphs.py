@@ -11,9 +11,9 @@ if str(REPO_ROOT) not in sys.path:
 
 import argparse
 import json
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime, timezone
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from src.ingestion.deterministic import sha256_text
 from src.parse.eurlex_html import TextBlock
@@ -55,8 +55,10 @@ def compact_std(std: str) -> str:
 
 def split_text_deterministic(text: str, max_chars: int, overlap: int) -> List[str]:
     """
-    Deterministically split a long paragraph into multiple parts with optional overlap.
-    We try to cut on whitespace near the end of each window to avoid mid-word splits.
+    Deterministic splitter:
+    - keeps max len <= max_chars
+    - overlaps by `overlap` chars between parts
+    - tries to cut on whitespace near the end of the window (up to 200 chars back)
     """
     t = (text or "").strip()
     if not t:
@@ -70,16 +72,12 @@ def split_text_deterministic(text: str, max_chars: int, overlap: int) -> List[st
     parts: List[str] = []
     n = len(t)
     start = 0
-
-    # We search for a "nice cut" up to 200 chars backwards from the window end.
-    back_window = 200
-
     while start < n:
         end = min(n, start + max_chars)
         cut = end
 
         if end < n:
-            back = max(start + 1, end - back_window)
+            back = max(start + 1, end - 200)
             window = t[back:end]
             idx = max(window.rfind(" "), window.rfind("\n"), window.rfind("\t"))
             if idx != -1:
@@ -92,14 +90,13 @@ def split_text_deterministic(text: str, max_chars: int, overlap: int) -> List[st
         if end >= n:
             break
 
-        # next start with overlap
         start = max(0, cut - overlap)
+        if start <= 0 and cut <= 0:
+            start = end
 
-        # safety guard (should not happen, but prevents infinite loops)
-        if cut <= 0 and start == 0:
-            start = end
-        if step <= 0:
-            start = end
+        # safety: ensure progress even in pathological cases
+        if len(parts) > 20000:
+            break
 
     return parts
 
@@ -111,18 +108,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--out", required=True, help="Output chunks jsonl")
     ap.add_argument("--limit", type=int, default=0, help="Limit chunks for test (0=all)")
     ap.add_argument("--progress-every", type=int, default=0, help="Progress print every N blocks (0=off)")
-    ap.add_argument(
-        "--max-chars",
-        type=int,
-        default=6000,
-        help="Max characters per chunk; oversized paragraphs are split deterministically",
-    )
-    ap.add_argument(
-        "--overlap",
-        type=int,
-        default=200,
-        help="Overlap chars between split parts (only when splitting)",
-    )
+    ap.add_argument("--max-chars", type=int, default=6000, help="Max characters per chunk; oversized paragraphs are split")
+    ap.add_argument("--overlap", type=int, default=200, help="Overlap chars between split parts (only when splitting)")
     return ap.parse_args()
 
 
@@ -151,14 +138,8 @@ def main() -> int:
     step = "m2_build_chunks_ifrs_paragraphs"
     rec = TelemetryRecorder(step=step)
     rec.start(
-        inputs={
-            "in": str(inp),
-            "out": str(outp),
-            "sources": args.sources,
-            "max_chars": int(args.max_chars),
-            "overlap": int(args.overlap),
-        },
-        extra={"doc_id": doc_id, "lang": lang, "run_id": utc_run_id()},
+        inputs={"in": str(inp), "out": str(outp), "sources": args.sources},
+        extra={"doc_id": doc_id, "lang": lang, "run_id": utc_run_id(), "max_chars": args.max_chars, "overlap": args.overlap},
     )
 
     outp.parent.mkdir(parents=True, exist_ok=True)
@@ -207,14 +188,19 @@ def main() -> int:
     with rec.span("extract_standard_paragraphs", blocks=len(blocks)):
         extracted = extract_standard_paragraphs(blocks)
 
-    # stats counters
+    # Counters / stats
     std_counter = Counter()
     max_len = 0
-    max_len_std: Optional[str] = None
-    max_len_key: Optional[str] = None
+    max_len_std = None
+    max_len_key = None
+
+    # Dedup tracking: (std, base_key) -> occurrence count
+    occ = defaultdict(int)
+    duplicate_base_keys = Counter()
 
     chunk_index = 0
     written = 0
+    split_chunks = 0
 
     with rec.span("write_chunks", standards=len(extracted)):
         with outp.open("a", encoding="utf-8") as fout:
@@ -224,53 +210,56 @@ def main() -> int:
                     if args.limit and written >= args.limit:
                         break
 
-                    base_text = (p.text or "").strip()
-                    if not base_text:
+                    full_text = (p.text or "").strip()
+                    if not full_text:
                         continue
 
-                    para_key_base = p.key
-                    parts = split_text_deterministic(base_text, args.max_chars, args.overlap)
-                    if not parts:
+                    base_key = (p.key or "").strip()
+                    if not base_key:
                         continue
 
-                    part_count = len(parts)
-                    for part_i, part_text in enumerate(parts, start=1):
+                    # Deduplicate base paragraph keys within the same standard (deterministic by traversal order)
+                    occ[(std, base_key)] += 1
+                    k_occ = occ[(std, base_key)]
+                    para_key_base = base_key
+                    para_key = base_key if k_occ == 1 else f"{base_key}@{k_occ}"
+
+                    if k_occ > 1:
+                        duplicate_base_keys[f"{compact_std(std)}:{base_key}"] += 1
+
+                    parts = split_text_deterministic(full_text, args.max_chars, args.overlap)
+                    if len(parts) > 1:
+                        split_chunks += (len(parts) - 1)
+
+                    for part_i, text in enumerate(parts, start=1):
                         if args.limit and written >= args.limit:
                             break
 
-                        # Make keys stable + unique when split happens
-                        if part_count == 1:
-                            para_key = para_key_base
-                            para_part = None
-                            para_parts = None
-                        else:
-                            para_key = f"{para_key_base}#{part_i}"
-                            para_part = part_i
-                            para_parts = part_count
+                        # If split, suffix #part
+                        para_key_part = para_key if len(parts) == 1 else f"{para_key}#{part_i}"
+                        cite_key = f"{compact_std(std)}:{para_key_part}"
 
-                        cite_key = f"{compact_std(std)}:{para_key}"
-                        chunk_sha = sha256_text(part_text)
+                        chunk_sha = sha256_text(text)
 
                         std_counter[std] += 1
-                        if len(part_text) > max_len:
-                            max_len = len(part_text)
+                        if len(text) > max_len:
+                            max_len = len(text)
                             max_len_std = std
-                            max_len_key = para_key
+                            max_len_key = para_key_part
 
                         payload = {
                             **base,
                             "page": 0,
                             "standard_id": std,
                             "standard_codes": [std],
-                            "para_key": para_key,
+                            "para_key": para_key_part,
                             "para_key_base": para_key_base,
-                            "para_part": para_part,
-                            "para_parts": para_parts,
+                            "para_occurrence": k_occ,
                             "cite_key": cite_key,
                             "section_path": getattr(p, "section_path", None),
                             "chunk_index": chunk_index,
                             "chunk_sha256": chunk_sha,
-                            "text": part_text,
+                            "text": text,
                         }
 
                         fout.write(json.dumps(payload, ensure_ascii=False) + "\n")
@@ -280,11 +269,16 @@ def main() -> int:
                 if args.limit and written >= args.limit:
                     break
 
+    dup_examples = duplicate_base_keys.most_common(15)
+
     stats = {
         "doc_id": doc_id,
         "language": lang,
         "standards_extracted": len(extracted),
-        "paragraphs_total": written,
+        "chunks_written": written,
+        "split_chunks_added": split_chunks,
+        "duplicate_para_keys": len(duplicate_base_keys),
+        "duplicate_examples_top15": dup_examples,
         "top_20_standards": sorted(((k, v) for k, v in std_counter.items()), key=lambda x: x[1], reverse=True)[:20],
         "max_chunk_len": max_len,
         "max_chunk_ref": {"standard_id": max_len_std, "para_key": max_len_key},
@@ -292,7 +286,7 @@ def main() -> int:
         "overlap": int(args.overlap),
     }
 
-    rec.finalize(outputs={"chunks_written": written, "out": str(outp), "doc_id": doc_id, "stats": stats})
+    rec.finalize(outputs={"doc_id": doc_id, "out": str(outp), "stats": stats})
     print(json.dumps({"doc_id": doc_id, "lang": lang, "chunks_written": written, "out": str(outp)}, ensure_ascii=False, indent=2))
     print(json.dumps(stats, ensure_ascii=False, indent=2))
     return 0
