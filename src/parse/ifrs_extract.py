@@ -22,6 +22,9 @@ def strip_markers(s: str) -> str:
 STD_EN_IAS = re.compile(r"^INTERNATIONAL\s+ACCOUNTING\s+STANDARD\s+(\d+)\b", re.I)
 STD_EN_IFRS = re.compile(r"^INTERNATIONAL\s+FINANCIAL\s+REPORTING\s+STANDARD\s+(\d+)\b", re.I)
 
+STD_EN_IFRIC_INTERP = re.compile(r"^IFRIC\s+INTERPRETATION\s+(\d+)\b", re.I)
+STD_EN_SIC_INTERP   = re.compile(r"^SIC\s+INTERPRETATION\s+(\d+)\b", re.I)
+
 # Long-form IT (IAS) – in EUR-Lex IT you can see both forms:
 #   "PRINCIPIO CONTABILE INTERNAZIONALE 36"
 #   "PRINCIPIO CONTABILE INTERNAZIONALE N. 36"
@@ -57,6 +60,15 @@ def detect_standard_boundary(text: str) -> Optional[str]:
     m = STD_EN_IFRS.match(t)
     if m:
         return f"IFRS {m.group(1)}"
+
+
+    m = STD_EN_IFRIC_INTERP.match(t)
+    if m:
+        return f"IFRIC {m.group(1)}"
+
+    m = STD_EN_SIC_INTERP.match(t)
+    if m:
+        return f"SIC {m.group(1)}"
 
     m = STD_IT_IAS.match(t)
     if m:
