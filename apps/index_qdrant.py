@@ -81,10 +81,17 @@ def ollama_embed(base_url: str, model: str, text: str, max_chars: int = 1200) ->
     raise RuntimeError(f"ollama embeddings failed (context overflow): {last_body}")
 
 
-def stable_point_id(doc_id: str, page: int, chunk_sha256: str) -> str:
-    name = f"{doc_id}|p{page}|{chunk_sha256}"
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, name))
+def stable_point_id(doc_id: str, cite_key: str | None, page: int, chunk_sha256: str) -> str:
+    """Stable Qdrant point id.
 
+    Prefer cite_key (stable locator) when available; fallback to page+sha.
+    """
+    ck = (cite_key or "").strip()
+    if ck:
+        name = f"{doc_id}|{ck}"
+    else:
+        name = f"{doc_id}|p{page}|{chunk_sha256}"
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, name))
 
 def ensure_collection(client: QdrantClient, name: str, vector_size: int, recreate: bool = False) -> None:
     existing = [c.name for c in client.get_collections().collections]
@@ -203,8 +210,9 @@ def main() -> None:
                         doc_id = obj.get("doc_id", "")
                         page = int(obj.get("page", 0))
                         chunk_sha256 = obj.get("chunk_sha256", "")
+                        cite_key = (obj.get("cite_key") or "").strip()
 
-                        pid = stable_point_id(doc_id, page, chunk_sha256)
+                        pid = stable_point_id(doc_id, cite_key, page, chunk_sha256)
                         text = obj.get("text", "")
 
                         # --- Payload standardization (citations + filters) ---
@@ -230,6 +238,10 @@ def main() -> None:
                             "doc_id": doc_id,
                             "page": page,
                             "chunk_index": chunk_index,
+                            "cite_key": cite_key or None,
+                            "standard_id": obj.get("standard_id"),
+                            "para_key": obj.get("para_key"),
+                            "section_path": obj.get("section_path"),
                             "title": obj.get("title"),
                             "language": obj.get("language"),
                             "standard_codes": obj.get("standard_codes"),
