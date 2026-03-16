@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
-import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,52 +13,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from dotenv import load_dotenv
 
-from src.eurlex_html_blocks import extract_blocks_from_file
+from src.eurlex import extract_blocks_from_file, sha256_file, write_jsonl, build_rows
 from src.telemetry import TelemetryRecorder
-
-
-def sha256_file(path: Path) -> str:
-    h = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(1024 * 1024), b""):
-            h.update(chunk)
-    return h.hexdigest()
-
-
-def write_jsonl(out_path: Path, rows: list[dict]) -> None:
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w", encoding="utf-8") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-
-
-def build_rows(
-    *,
-    blocks,
-    doc_id: str,
-    celex: str,
-    language: str,
-    source_url: str | None,
-    source_path: Path,
-    source_sha256: str,
-) -> list[dict]:
-    rows: list[dict] = []
-    for i, b in enumerate(blocks):
-        rows.append(
-            {
-                "doc_id": doc_id,
-                "celex": celex,
-                "language": language,
-                "source_url": source_url,
-                "source_path": str(source_path),
-                "sha256": source_sha256,
-                "block_index": i,
-                "kind": b.kind,
-                "heading_path": b.heading_path,
-                "text": b.text,
-            }
-        )
-    return rows
 
 
 def parse_args() -> argparse.Namespace:

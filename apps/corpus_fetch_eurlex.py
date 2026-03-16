@@ -14,17 +14,8 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from src.fetch.eurlex import fetch_html
+from src.eurlex.fetch import fetch_html, load_sources, safe_name, write_manifest
 from src.telemetry import TelemetryRecorder
-
-
-def load_sources(path: Path) -> List[Dict[str, Any]]:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    return data["sources"]
-
-
-def safe_name(s: str) -> str:
-    return "".join(c if c.isalnum() or c in ("-", "_", ".") else "_" for c in s)
 
 
 def _git_commit() -> Optional[str]:
@@ -40,13 +31,6 @@ def _git_commit() -> Optional[str]:
     except Exception:
         return None
     return None
-
-
-def write_manifest(out_dir: Path, ts: str, fetched: list, failed: list, suffix: str = "") -> Path:
-    name = f"manifest.{ts}{suffix}.json"
-    p = out_dir / name
-    p.write_text(json.dumps({"downloaded_at_utc": ts, "fetched": fetched, "failed": failed}, indent=2), encoding="utf-8")
-    return p
 
 
 def main() -> int:
