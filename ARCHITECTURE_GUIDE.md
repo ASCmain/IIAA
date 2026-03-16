@@ -28,7 +28,19 @@ Sorgenti normative e documentali vengono raccolte in forma controllata.
 Per EUR-Lex, il progetto privilegia flusso **HTML-first** per parsing/normalizzazione; i PDF locali restano come reference artifacts.
 
 ### 3.2 Normalization / chunk preparation
-I documenti vengono normalizzati in blocchi o chunk, con metadati minimi coerenti con il retrieval:
+I documenti vengono normalizzati in blocchi o chunk, con metadati minimi coerenti con il retrieval.
+
+Per il ramo PDF/deterministic:
+- estrazione pagina per pagina;
+- chunking deterministico;
+- payload con metadati minimi.
+
+Per il ramo EUR-Lex HTML-first:
+- fetch HTML;
+- estrazione blocchi logici;
+- normalizzazione in righe JSONL.
+
+Metadati minimi coerenti con il retrieval:
 - `doc_id`
 - `source_url`
 - `source_path`
@@ -101,6 +113,34 @@ Il sistema deve essere validato tramite:
 - `src/PW_query_routing.py`  
   Facade compatibile per il trunk attuale.
 
+### 4.4 Livello ingestion PDF / deterministic
+- `src/ingestion/hashing.py`  
+  Hashing di file e testo.
+- `src/ingestion/textnorm.py`  
+  Normalizzazione testo.
+- `src/ingestion/chunking.py`  
+  Chunking deterministico.
+- `src/ingestion/pdf_io.py`  
+  Lettura pagine PDF.
+- `src/ingestion/catalog.py`  
+  Catalogo, iterazione item, risoluzione path, fingerprint runtime.
+- `src/ingestion/payloads.py`  
+  Costruzione payload chunk.
+- `src/ingestion/deterministic.py`  
+  Facade compatibile.
+
+### 4.5 Livello EUR-Lex HTML-first
+- `src/eurlex/fetch.py`  
+  Supporto fetch HTML, loading source list, manifest writing.
+- `src/eurlex/blocks.py`  
+  Parsing HTML EUR-Lex e block extraction.
+- `src/eurlex/normalize.py`  
+  Costruzione righe normalizzate JSONL.
+- `src/eurlex/__init__.py`  
+  Export compatibile dei componenti del ramo HTML.
+- `src/eurlex_html_blocks.py`  
+  Facade compatibile verso il parser blocchi.
+
 ---
 
 ## 5. Contratti dati principali
@@ -162,9 +202,14 @@ Conservare distinzione tra:
 ## 7. Refactor roadmap consigliata
 
 ### 7.1 Priorità alta
-1. refactor ingestion / normalization in moduli `src/ingestion/`
-2. refactor indexing in moduli dedicati `src/indexing/`
-3. separazione rendering/debug UI da logica Streamlit principale
+1. refactor indexing in moduli dedicati `src/indexing/`
+2. separazione rendering/debug UI da logica Streamlit principale
+3. introduzione harness di regression test sui casi benchmark
+
+### 7.1.a Refactor già completati
+- modularizzazione del nucleo RAG in `src/rag/`
+- modularizzazione ingestion PDF/deterministic in `src/ingestion/`
+- modularizzazione EUR-Lex HTML-first in `src/eurlex/`
 
 ### 7.2 Priorità media
 1. introduzione regression harness
