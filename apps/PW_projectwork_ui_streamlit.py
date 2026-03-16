@@ -157,10 +157,24 @@ def main() -> None:
                             "section_path": c.get("section_path"),
                             "score": c.get("score"),
                             "source": c.get("source"),
+                            "pdf_reference_path": c.get("pdf_reference_path"),
                         }
                         for c in cits
                     ]
                 )
+
+                if cits:
+                    st.markdown("Riferimenti fonte")
+                    for i, c in enumerate(cits, 1):
+                        cite_key = c.get("cite_key") or "(no cite_key)"
+                        source = c.get("source") or ""
+                        pdf_ref = c.get("pdf_reference_path") or ""
+
+                        st.markdown(f"**[{i}] {cite_key}**")
+                        if source:
+                            st.code(f"Fonte ufficiale: {source}")
+                        if pdf_ref:
+                            st.code(f"Riferimento locale PDF: {pdf_ref}")
 
                 st.markdown("Retrieval evidences (raw)")
                 st.json(payload.get("evidences") or [])

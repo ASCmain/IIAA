@@ -22,6 +22,7 @@ class Evidence:
     standard_id: Optional[str] = None     # e.g., "IAS 36"
     para_key: Optional[str] = None        # e.g., "18", "6.5.13", "141#2"
     section_path: Optional[str] = None    # e.g., "IAS 36 > DEFINITIONS"
+    pdf_reference_path: Optional[str] = None
 
 
 # ----------------------------
@@ -163,10 +164,21 @@ def retrieve(
         payload = getattr(p, "payload", None) or {}
         evidences.append(
             Evidence(
-                id=str(getattr(p, "id", "")),
+                point_id=str(getattr(p, "id", "")),
                 score=float(getattr(p, "score", 0.0)),
-                payload=payload,
                 text=str(payload.get("text") or ""),
+                source=str(
+                    payload.get("source")
+                    or payload.get("source_url")
+                    or payload.get("source_path")
+                    or payload.get("doc_id")
+                    or ""
+                ),
+                cite_key=payload.get("cite_key"),
+                standard_id=payload.get("standard_id"),
+                para_key=payload.get("para_key"),
+                section_path=payload.get("section_path"),
+                pdf_reference_path=payload.get("pdf_reference_path"),
             )
         )
     return evidences
@@ -224,6 +236,7 @@ def run_query(
                 "para_key": e.para_key,
                 "section_path": e.section_path,
                 "source": e.source,
+                "pdf_reference_path": e.pdf_reference_path,
                 "score": e.score,
             }
         )
