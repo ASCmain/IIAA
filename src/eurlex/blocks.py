@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import re
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
 from bs4 import BeautifulSoup, Tag
+from bs4 import XMLParsedAsHTMLWarning
 
 from src.text_normalize import normalize_text
 
@@ -88,6 +90,7 @@ def _iter_relevant_elements(soup: BeautifulSoup) -> Iterator[Tag]:
 
 
 def extract_blocks(html: str) -> list[HtmlBlock]:
+    warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
     soup = BeautifulSoup(html, "lxml")
 
     blocks: list[HtmlBlock] = []
