@@ -70,6 +70,10 @@ def main() -> int:
         labels = [c.get("cite_key") for c in (r.citations or []) if c.get("cite_key")]
         return {
             "case_id": r.case_id,
+            "question_type": (r.query_plan or {}).get("question_type"),
+            "source_preference": (r.query_plan or {}).get("source_preference"),
+            "needs_numeric_reasoning": (r.query_plan or {}).get("needs_numeric_reasoning"),
+            "target_standards": (r.query_plan or {}).get("target_standards"),
             "citations_count": len(r.citations or []),
             "evidences_count": len(r.evidences or []),
             "has_celex_32025R1266": "CELEX:32025R1266" in labels or "CELEX:32025R1266" in answer,

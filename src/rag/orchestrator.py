@@ -8,7 +8,8 @@ from .language import detect_language_80_20
 from .ollama_io import ollama_chat, ollama_embed
 from .prompting import build_grounded_prompt, citation_label
 from .retrieval import retrieve
-
+from .query_planning import build_query_plan
+from .source_policy import filter_evidences_for_plan, rerank_evidences_for_plan
 
 def run_query(
     query: str,
@@ -38,8 +39,20 @@ def run_query(
 
     collection = collection_it if lang == "IT" else collection_en
 
+    plan = build_query_plan(q)
+    retrieval_pool_k = max(int(top_k), int(plan.suggested_top_k), 12)
+
     vec = ollama_embed(ollama_base_url, embed_model, q, max_chars=embed_max_chars)
-    evidences = retrieve(qdrant_client, collection, vec, top_k=top_k, score_threshold=score_threshold)
+    evidences = retrieve(
+        qdrant_client,
+        collection,
+        vec,
+        top_k=retrieval_pool_k,
+        score_threshold=score_threshold,
+    )
+    evidences = filter_evidences_for_plan(plan, evidences, requested_top_k=int(top_k))
+    evidences = rerank_evidences_for_plan(plan, evidences)
+    evidences = evidences[: int(top_k)]
 
     prompt = build_grounded_prompt(q, evidences, answer_language=lang)
     answer = ollama_chat(ollama_base_url, chat_model, prompt, temperature=temperature)
@@ -62,6 +75,7 @@ def run_query(
         "answer": answer,
         "lang": lang,
         "collection": collection,
+        "query_plan": plan.to_dict(),
         "citations": citations,
         "evidences": [e.__dict__ for e in evidences],
     }

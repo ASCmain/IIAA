@@ -27,6 +27,7 @@ class BenchmarkRunResult:
     answer: str
     lang: str
     collection: str
+    query_plan: Dict[str, Any]
     citations: List[Dict[str, Any]]
     evidences: List[Dict[str, Any]]
 

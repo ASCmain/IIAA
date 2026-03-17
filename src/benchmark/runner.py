@@ -44,6 +44,7 @@ def run_benchmark_cases(
                 answer=payload.get("answer") or "",
                 lang=payload.get("lang") or "",
                 collection=payload.get("collection") or "",
+                query_plan=payload.get("query_plan") or {},
                 citations=payload.get("citations") or [],
                 evidences=payload.get("evidences") or [],
             )
