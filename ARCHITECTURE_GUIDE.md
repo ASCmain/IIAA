@@ -98,6 +98,21 @@ Il sistema deve essere validato tramite:
   Logica di dominio e librerie interne.
 
 ### 4.3 Livello RAG
+### 4.3.a Advanced RAG policy layer
+Il livello RAG è stato esteso con una politica esplicita di query planning e source policy:
+
+- `src/rag/query_planning.py`  
+  Classificazione generale del quesito (change analysis, transition/disclosure, rule interpretation, numeric, ecc.).
+- `src/rag/source_policy.py`  
+  Politica di selezione e ordinamento delle evidenze in base a:
+  - priorità tra atto modificativo e consolidato;
+  - standard target;
+  - disclosure/transizione;
+  - trattamento dei quesiti numerici;
+  - distinzione progressiva tra evidenze core e di contesto.
+
+Questa logica è descritta in modo esteso in `docs/ADVANCED_RAG_POLICY.md`.
+
 - `src/rag/models.py`  
   Modelli di dominio del retrieval, es. `Evidence`.
 - `src/rag/ollama_io.py`  

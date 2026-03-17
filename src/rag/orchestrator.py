@@ -9,7 +9,7 @@ from .ollama_io import ollama_chat, ollama_embed
 from .prompting import build_grounded_prompt, citation_label
 from .retrieval import retrieve
 from .query_planning import build_query_plan
-from .source_policy import filter_evidences_for_plan, rerank_evidences_for_plan
+from .source_policy import filter_evidences_for_plan, rerank_evidences_for_plan, split_core_and_context_for_plan
 
 def run_query(
     query: str,
@@ -52,13 +52,29 @@ def run_query(
     )
     evidences = filter_evidences_for_plan(plan, evidences, requested_top_k=int(top_k))
     evidences = rerank_evidences_for_plan(plan, evidences)
-    evidences = evidences[: int(top_k)]
+    evidences = evidences[: max(int(top_k), 8)]
 
-    prompt = build_grounded_prompt(q, evidences, answer_language=lang)
+    core_evidences, context_evidences = split_core_and_context_for_plan(plan, evidences)
+
+    max_core = 4 if plan.question_type in {"change_analysis", "transition_disclosure"} else 5
+    max_context = 2 if plan.question_type in {"change_analysis", "transition_disclosure"} else 4
+
+    core_evidences = core_evidences[:max_core]
+    context_evidences = context_evidences[:max_context]
+
+    prompt = build_grounded_prompt(
+        q,
+        core_evidences=core_evidences,
+        context_evidences=context_evidences,
+        answer_language=lang,
+    )
     answer = ollama_chat(ollama_base_url, chat_model, prompt, temperature=temperature)
 
+    core_ids = {getattr(e, "point_id", None) for e in core_evidences}
+    final_evidences = list(core_evidences) + [e for e in context_evidences if getattr(e, "point_id", None) not in core_ids]
+
     citations = []
-    for e in evidences:
+    for e in final_evidences:
         citations.append(
             {
                 "cite_key": citation_label(e),
@@ -76,6 +92,8 @@ def run_query(
         "lang": lang,
         "collection": collection,
         "query_plan": plan.to_dict(),
+        "core_evidences_count": len(core_evidences),
+        "context_evidences_count": len(context_evidences),
         "citations": citations,
-        "evidences": [e.__dict__ for e in evidences],
+        "evidences": [e.__dict__ for e in final_evidences],
     }

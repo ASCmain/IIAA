@@ -125,3 +125,65 @@ def rerank_evidences_for_plan(plan: QueryPlan, evidences):
         return score
 
     return sorted(evidences, key=score_evidence, reverse=True)
+
+
+def split_core_and_context_for_plan(plan: QueryPlan, evidences):
+    target_upper = {x.upper() for x in (plan.target_standards or [])}
+
+    core = []
+    context = []
+
+    for e in evidences:
+        hay = " ".join([
+            str(e.cite_key or ""),
+            str(e.standard_id or ""),
+            str(e.para_key or ""),
+            str(e.section_path or ""),
+            str(e.source or ""),
+            str(e.text or "")[:1500],
+        ]).upper()
+
+        is_target = any(std in hay for std in target_upper) if target_upper else False
+        is_modifying_act = "32025R1266" in hay or "2025/1266" in hay
+        is_measurement_context = any(x in hay for x in [
+            "FAIR VALUE", "VALORE EQUO",
+            "VALUE IN USE", "VALORE D'USO",
+            "VALORE RECUPERABILE", "CARRYING AMOUNT", "VALORE CONTABILE",
+            "CGU", "UNITÀ GENERATRICE DI FLUSSI FINANZIARI",
+            "RIDUZIONE DI VALORE", "IMPAIRMENT"
+        ])
+
+        if plan.needs_modifying_act_priority:
+            if is_modifying_act or is_target:
+                core.append(e)
+            else:
+                context.append(e)
+            continue
+
+        if plan.question_type in {"rule_interpretation", "numeric_calculation", "mixed_numeric_interpretive"}:
+            if is_target:
+                core.append(e)
+            elif is_measurement_context:
+                context.append(e)
+            else:
+                context.append(e)
+            continue
+
+        if is_target:
+            core.append(e)
+        else:
+            context.append(e)
+
+    # dedup preserve order
+    def _dedup(seq):
+        seen = set()
+        out = []
+        for e in seq:
+            pid = getattr(e, "point_id", None)
+            if pid in seen:
+                continue
+            seen.add(pid)
+            out.append(e)
+        return out
+
+    return _dedup(core), _dedup(context)

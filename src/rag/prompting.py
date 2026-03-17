@@ -39,9 +39,15 @@ def format_evidence(e: Evidence, i: int) -> str:
     ).strip()
 
 
-def build_grounded_prompt(query: str, evidences: List[Evidence], answer_language: str) -> str:
+def build_grounded_prompt(
+    query: str,
+    core_evidences: List[Evidence],
+    context_evidences: List[Evidence],
+    answer_language: str,
+) -> str:
     lang_note = "Italiano" if answer_language.upper() == "IT" else "English"
-    cites = "\n\n".join(format_evidence(e, i + 1) for i, e in enumerate(evidences))
+    core_cites = "\n\n".join(format_evidence(e, i + 1) for i, e in enumerate(core_evidences))
+    context_cites = "\n\n".join(format_evidence(e, i + 1) for i, e in enumerate(context_evidences))
 
     return f"""
 You are an IAS/IFRS assistant. Answer in {lang_note}.
@@ -53,12 +59,17 @@ Rules:
 - If an item has no paragraph cite_key, use the fallback label exactly as shown in the evidence bundle, for example [CELEX:32025R1266].
 - Do NOT invent citations.
 - If you use multiple evidences, cite each relevant statement with the appropriate label.
+- Treat CORE evidences as primary authority.
+- Use CONTEXT evidences only to clarify, distinguish concepts, or complete the answer without overriding CORE evidences.
 
 User question:
 {query}
 
-Evidence bundle (each item has label + text):
-{cites}
+CORE evidences:
+{core_cites}
+
+CONTEXT evidences:
+{context_cites}
 
 Now produce:
 1) A concise answer (2–10 paragraphs), in {lang_note}.

@@ -74,6 +74,8 @@ def main() -> int:
             "source_preference": (r.query_plan or {}).get("source_preference"),
             "needs_numeric_reasoning": (r.query_plan or {}).get("needs_numeric_reasoning"),
             "target_standards": (r.query_plan or {}).get("target_standards"),
+            "core_evidences_count": (r.query_plan or {}).get("core_evidences_count"),
+            "context_evidences_count": (r.query_plan or {}).get("context_evidences_count"),
             "citations_count": len(r.citations or []),
             "evidences_count": len(r.evidences or []),
             "has_celex_32025R1266": "CELEX:32025R1266" in labels or "CELEX:32025R1266" in answer,
