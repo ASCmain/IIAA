@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+import subprocess
 from datetime import datetime, UTC
 from pathlib import Path
 
@@ -12,6 +13,28 @@ if str(REPO_ROOT) not in sys.path:
 from qdrant_client import QdrantClient
 
 from src.benchmark import BenchmarkCase, run_benchmark_cases, write_json, write_jsonl
+from src.telemetry import TelemetryRecorder
+
+
+def _git_commit() -> str:
+    try:
+        out = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=REPO_ROOT,
+            text=True,
+        ).strip()
+        return out
+    except Exception:
+        return ""
+
+
+def _print_progress(current: int, total: int, label: str) -> None:
+    total = max(int(total), 1)
+    current = max(0, min(int(current), total))
+    width = 28
+    filled = int(width * current / total)
+    bar = "#" * filled + "-" * (width - filled)
+    print(f"[{bar}] {current}/{total} {label}")
 
 
 def main() -> int:
@@ -22,6 +45,8 @@ def main() -> int:
 
     embed_model = os.environ.get("BENCHMARK_EMBED_MODEL", "mxbai-embed-large:latest")
     chat_model = os.environ.get("BENCHMARK_CHAT_MODEL", "mistral:latest")
+    classifier_mode = os.environ.get("EVIDENCE_CLASSIFIER_MODE", "off")
+    classifier_model = os.environ.get("EVIDENCE_CLASSIFIER_MODEL", "")
 
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     out_dir = Path("debug_dump/benchmark_runs") / f"smoke_{run_id}"
@@ -54,16 +79,50 @@ def main() -> int:
         ),
     ]
 
-    client = QdrantClient(url=qdrant_url)
-    results = run_benchmark_cases(
-        cases=cases,
-        qdrant_client=client,
-        collection_it=collection_it,
-        collection_en=collection_en,
-        ollama_base_url=ollama_base,
-        embed_model=embed_model,
-        chat_model=chat_model,
+    telemetry = TelemetryRecorder(step="benchmark_smoke")
+    telemetry.start(
+        inputs={
+            "run_id": run_id,
+            "cases_count": len(cases),
+            "case_ids": [c.case_id for c in cases],
+            "qdrant_url": qdrant_url,
+            "collection_it": collection_it,
+            "collection_en": collection_en,
+            "embed_model": embed_model,
+            "chat_model": chat_model,
+            "classifier_mode": classifier_mode,
+            "classifier_model": classifier_model,
+        },
+        extra={
+            "app": "apps/run_benchmark_smoke.py",
+            "out_dir": str(out_dir),
+        },
     )
+
+    total_phases = 4
+    current_phase = 0
+
+    telemetry.event("phase_start", phase="bootstrap")
+    with telemetry.span("bootstrap"):
+        client = QdrantClient(url=qdrant_url)
+    current_phase += 1
+    _print_progress(current_phase, total_phases, "bootstrap completato")
+    telemetry.event("phase_done", phase="bootstrap")
+
+    telemetry.event("phase_start", phase="run_benchmark_cases")
+    with telemetry.span("run_benchmark_cases", cases_count=len(cases)):
+        results = run_benchmark_cases(
+            cases=cases,
+            qdrant_client=client,
+            collection_it=collection_it,
+            collection_en=collection_en,
+            ollama_base_url=ollama_base,
+            embed_model=embed_model,
+            chat_model=chat_model,
+        )
+    current_phase += 1
+    _print_progress(current_phase, total_phases, "benchmark completato")
+    telemetry.event("phase_done", phase="run_benchmark_cases", results_count=len(results))
 
     def assess_result(r):
         answer = r.answer or ""
@@ -88,8 +147,8 @@ def main() -> int:
             "threshold_initial": getattr(r, "threshold_initial", None),
             "threshold_effective": getattr(r, "threshold_effective", None),
             "coverage_warning_low_candidate_count": getattr(r, "coverage_warning_low_candidate_count", False),
-            "core_evidences_count": (r.query_plan or {}).get("core_evidences_count"),
-            "context_evidences_count": (r.query_plan or {}).get("context_evidences_count"),
+            "core_evidences_count": getattr(r, "core_evidences_count", (r.query_plan or {}).get("core_evidences_count")),
+            "context_evidences_count": getattr(r, "context_evidences_count", (r.query_plan or {}).get("context_evidences_count")),
             "classifier_mode": getattr(r, "classifier_mode", ""),
             "classifier_model": getattr(r, "classifier_model", ""),
             "classifier_items_count": getattr(r, "classifier_items_count", 0),
@@ -102,22 +161,51 @@ def main() -> int:
             "answer_len": len(answer),
         }
 
-    summary = {
-        "run_id": run_id,
-        "qdrant_url": qdrant_url,
-        "collection_it": collection_it,
-        "collection_en": collection_en,
-        "embed_model": embed_model,
-        "chat_model": chat_model,
-        "cases_count": len(cases),
-        "cases": [c.to_dict() for c in cases],
-        "quick_checks": [assess_result(r) for r in results],
-    }
+    telemetry.event("phase_start", phase="build_summary")
+    with telemetry.span("build_summary"):
+        quick_checks = [assess_result(r) for r in results]
+        summary = {
+            "run_id": run_id,
+            "qdrant_url": qdrant_url,
+            "collection_it": collection_it,
+            "collection_en": collection_en,
+            "embed_model": embed_model,
+            "chat_model": chat_model,
+            "classifier_mode": classifier_mode,
+            "classifier_model": classifier_model,
+            "cases_count": len(cases),
+            "cases": [c.to_dict() for c in cases],
+            "quick_checks": quick_checks,
+        }
+    current_phase += 1
+    _print_progress(current_phase, total_phases, "summary costruito")
+    telemetry.event("phase_done", phase="build_summary", quick_checks_count=len(quick_checks))
 
-    write_json(out_dir / "summary.json", summary)
-    write_jsonl(out_dir / "results.jsonl", [r.to_dict() for r in results])
+    telemetry.event("phase_start", phase="write_outputs")
+    with telemetry.span("write_outputs"):
+        write_json(out_dir / "summary.json", summary)
+        write_jsonl(out_dir / "results.jsonl", [r.to_dict() for r in results])
+    current_phase += 1
+    _print_progress(current_phase, total_phases, "file scritti")
+    telemetry.event(
+        "phase_done",
+        phase="write_outputs",
+        summary_path=str(out_dir / "summary.json"),
+        results_path=str(out_dir / "results.jsonl"),
+    )
 
-    for r in results:
+    for idx, r in enumerate(results, start=1):
+        telemetry.event(
+            "case_result",
+            case_id=r.case_id,
+            idx=idx,
+            total=len(results),
+            citations_count=len(r.citations or []),
+            evidences_count=len(r.evidences or []),
+            answer_len=len(r.answer or ""),
+            classifier_items_count=getattr(r, "classifier_items_count", 0),
+        )
+
         print(f"\n=== {r.case_id} ===")
         print("label:", r.label)
         print("lang:", r.lang)
@@ -125,6 +213,24 @@ def main() -> int:
         print("citations_count:", len(r.citations or []))
         ans = (r.answer or "").replace("\n", " ")
         print("answer_preview:", ans[:1500])
+        _print_progress(idx, len(results), f"risultato stampato: {r.case_id}")
+
+    telemetry_path = telemetry.finalize(
+        outputs={
+            "run_id": run_id,
+            "out_dir": str(out_dir),
+            "summary_path": str(out_dir / "summary.json"),
+            "results_path": str(out_dir / "results.jsonl"),
+            "cases_count": len(cases),
+        },
+        extra={
+            "quick_checks_count": len(quick_checks),
+        },
+        git_commit=_git_commit(),
+    )
+
+    if telemetry_path is not None:
+        print(f"TELEMETRY_PATH={telemetry_path}")
 
     print(f"\nOUTPUT_DIR={out_dir}")
     return 0
