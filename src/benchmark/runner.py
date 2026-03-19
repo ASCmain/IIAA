@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from typing import Iterable, List
+import time
+from typing import Any, Callable, Dict, Iterable, List
 
 from qdrant_client import QdrantClient
 
 from src.PW_query_routing import run_query
 from .models import BenchmarkCase, BenchmarkRunResult
+
+ProgressCallback = Callable[[Dict[str, Any]], None]
 
 
 def run_benchmark_cases(
@@ -17,10 +20,27 @@ def run_benchmark_cases(
     ollama_base_url: str,
     embed_model: str,
     chat_model: str,
+    progress_cb: ProgressCallback | None = None,
 ) -> List[BenchmarkRunResult]:
+    case_list = list(cases)
     out: List[BenchmarkRunResult] = []
+    total = len(case_list)
 
-    for case in cases:
+    for idx, case in enumerate(case_list, start=1):
+        if progress_cb is not None:
+            progress_cb(
+                {
+                    "event": "case_start",
+                    "idx": idx,
+                    "total": total,
+                    "case_id": case.case_id,
+                    "label": case.label,
+                    "lang_mode": case.lang_mode,
+                    "top_k": case.top_k,
+                }
+            )
+
+        t0 = time.perf_counter()
         payload = run_query(
             case.query,
             qdrant_client=qdrant_client,
@@ -35,37 +55,60 @@ def run_benchmark_cases(
             embed_max_chars=case.embed_max_chars,
             temperature=case.temperature,
         )
+        case_duration_ms = int((time.perf_counter() - t0) * 1000)
 
-        out.append(
-            BenchmarkRunResult(
-                case_id=case.case_id,
-                label=case.label,
-                query=case.query,
-                answer=payload.get("answer") or "",
-                lang=payload.get("lang") or "",
-                collection=payload.get("collection") or "",
-                query_plan={
-                    **(payload.get("query_plan") or {}),
-                    "core_evidences_count": payload.get("core_evidences_count"),
-                    "context_evidences_count": payload.get("context_evidences_count"),
-                },
-                retrieval_raw_count=payload.get("retrieval_raw_count") or 0,
-                retrieval_above_initial_threshold_count=payload.get("retrieval_above_initial_threshold_count") or 0,
-                analysis_pool_count=payload.get("analysis_pool_count") or 0,
-                analysis_pool_target=payload.get("analysis_pool_target") or 0,
-                min_candidate_floor=payload.get("min_candidate_floor") or 0,
-                threshold_initial=payload.get("threshold_initial"),
-                threshold_effective=payload.get("threshold_effective"),
-                coverage_warning_low_candidate_count=bool(payload.get("coverage_warning_low_candidate_count")),
-                classifier_mode=payload.get("classifier_mode") or "",
-                classifier_model=payload.get("classifier_model") or "",
-                classifier_items=payload.get("classifier_items") or [],
-                classifier_items_count=payload.get("classifier_items_count") or 0,
-                classifier_raw_response=payload.get("classifier_raw_response") or "",
-                telemetry_timing_ms=payload.get("telemetry_timing_ms") or {},
-                citations=payload.get("citations") or [],
-                evidences=payload.get("evidences") or [],
-            )
+        result = BenchmarkRunResult(
+            case_id=case.case_id,
+            label=case.label,
+            query=case.query,
+            answer=payload.get("answer") or "",
+            lang=payload.get("lang") or "",
+            collection=payload.get("collection") or "",
+            query_plan={
+                **(payload.get("query_plan") or {}),
+                "core_evidences_count": payload.get("core_evidences_count"),
+                "context_evidences_count": payload.get("context_evidences_count"),
+            },
+            retrieval_raw_count=payload.get("retrieval_raw_count") or 0,
+            retrieval_above_initial_threshold_count=payload.get("retrieval_above_initial_threshold_count") or 0,
+            analysis_pool_count=payload.get("analysis_pool_count") or 0,
+            analysis_pool_target=payload.get("analysis_pool_target") or 0,
+            min_candidate_floor=payload.get("min_candidate_floor") or 0,
+            threshold_initial=payload.get("threshold_initial"),
+            threshold_effective=payload.get("threshold_effective"),
+            coverage_warning_low_candidate_count=bool(payload.get("coverage_warning_low_candidate_count")),
+            classifier_mode=payload.get("classifier_mode") or "",
+            classifier_model=payload.get("classifier_model") or "",
+            classifier_items=payload.get("classifier_items") or [],
+            classifier_items_count=payload.get("classifier_items_count") or 0,
+            classifier_raw_response=payload.get("classifier_raw_response") or "",
+            telemetry_timing_ms={
+                **(payload.get("telemetry_timing_ms") or {}),
+                "case_total_ms": case_duration_ms,
+            },
+            citations=payload.get("citations") or [],
+            evidences=payload.get("evidences") or [],
         )
+
+        out.append(result)
+
+        if progress_cb is not None:
+            progress_cb(
+                {
+                    "event": "case_done",
+                    "idx": idx,
+                    "total": total,
+                    "case_id": result.case_id,
+                    "label": result.label,
+                    "lang": result.lang,
+                    "collection": result.collection,
+                    "citations_count": len(result.citations or []),
+                    "evidences_count": len(result.evidences or []),
+                    "classifier_items_count": result.classifier_items_count,
+                    "answer_len": len(result.answer or ""),
+                    "case_total_ms": case_duration_ms,
+                    "telemetry_timing_ms": result.telemetry_timing_ms,
+                }
+            )
 
     return out

@@ -37,6 +37,44 @@ def _print_progress(current: int, total: int, label: str) -> None:
     print(f"[{bar}] {current}/{total} {label}")
 
 
+def _make_progress_cb(telemetry):
+    def _cb(info):
+        event = info.get("event") or ""
+        if event == "case_start":
+            telemetry.event(
+                "case_start",
+                case_id=info.get("case_id"),
+                idx=info.get("idx"),
+                total=info.get("total"),
+                label=info.get("label"),
+                lang_mode=info.get("lang_mode"),
+                top_k=info.get("top_k"),
+            )
+            _print_progress(
+                int(info.get("idx") or 0) - 1,
+                int(info.get("total") or 1),
+                f"avvio case: {info.get('case_id')}",
+            )
+        elif event == "case_done":
+            telemetry.event(
+                "case_done",
+                case_id=info.get("case_id"),
+                idx=info.get("idx"),
+                total=info.get("total"),
+                citations_count=info.get("citations_count"),
+                evidences_count=info.get("evidences_count"),
+                classifier_items_count=info.get("classifier_items_count"),
+                answer_len=info.get("answer_len"),
+                case_total_ms=info.get("case_total_ms"),
+            )
+            _print_progress(
+                int(info.get("idx") or 0),
+                int(info.get("total") or 1),
+                f"case completato: {info.get('case_id')} ({info.get('case_total_ms')} ms)",
+            )
+    return _cb
+
+
 def main() -> int:
     qdrant_url = os.environ["QDRANT_URL"]
     ollama_base = os.environ["OLLAMA_BASE_URL"]
@@ -109,6 +147,8 @@ def main() -> int:
     _print_progress(current_phase, total_phases, "bootstrap completato")
     telemetry.event("phase_done", phase="bootstrap")
 
+    progress_cb = _make_progress_cb(telemetry)
+
     telemetry.event("phase_start", phase="run_benchmark_cases")
     with telemetry.span("run_benchmark_cases", cases_count=len(cases)):
         results = run_benchmark_cases(
@@ -119,6 +159,7 @@ def main() -> int:
             ollama_base_url=ollama_base,
             embed_model=embed_model,
             chat_model=chat_model,
+            progress_cb=progress_cb,
         )
     current_phase += 1
     _print_progress(current_phase, total_phases, "benchmark completato")
