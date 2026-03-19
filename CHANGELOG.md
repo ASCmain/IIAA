@@ -40,3 +40,9 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 ### Added
 - arricchimento degli eventi `case_done` del benchmark smoke con segnali architetturali per-case (`question_type`, `source_preference`, `target_standards`, `analysis_pool_count`, `analysis_pool_target`, `threshold_effective`, `core_evidences_count`, `context_evidences_count`).
 
+
+### Added
+- micro-fix UX della progress bar del benchmark smoke per il primo `case_start`;
+- aggregati sintetici nel `summary.json` dello smoke benchmark (`question_type_counts`, statistiche `case_total_ms`);
+- allineamento documentale di `ARCHITECTURE_GUIDE.md` e `docs/ADVANCED_RAG_POLICY.md` rispetto a classifier locale, analysis pool adattivo e benchmark telemetry.
+
