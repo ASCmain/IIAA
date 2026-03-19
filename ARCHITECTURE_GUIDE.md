@@ -124,9 +124,15 @@ Questo consente di distinguere meglio:
 
 
 È inoltre previsto un classificatore locale delle evidenze (`src/rag/evidence_classifier.py`) servito tramite Ollama:
-- in modalità iniziale `shadow`
+- in modalità `off`, `shadow` o `assist`
 - con output strutturato `core/context/exclude`
-- usato per confronto e telemetria prima dell'eventuale promozione a componente assistiva del pruning
+- usato inizialmente per confronto e telemetria, e successivamente come supporto conservativo al bucket assignment core/context
+
+Il coordinamento in `src/rag/orchestrator.py` include inoltre:
+- retrieval pool esteso rispetto al solo `top_k`;
+- selezione di un `analysis_pool` guidato da `analysis_pool_target`, `min_candidate_floor` e `threshold_fallback_ladder`;
+- pruning successivo prima dello split `core/context`;
+- telemetry timing per fasi (`embed`, `retrieve`, `policy`, `classifier`, `prompt`).
 
 
 
@@ -144,6 +150,15 @@ Questo consente di distinguere meglio:
   Coordinamento end-to-end del flusso query → retrieval → risposta.
 - `src/PW_query_routing.py`  
   Facade compatibile per il trunk attuale.
+
+### 4.3.b Benchmark smoke e osservabilità
+Lo smoke benchmark applicativo (`apps/run_benchmark_smoke.py`) è stato esteso con:
+- progress callback live per singolo case;
+- telemetria standard di progetto in `telemetry/benchmark_smoke/run_*.json`;
+- artifact di run in `debug_dump/benchmark_runs/smoke_*/`;
+- summary sintetico con quick checks, segnali architetturali per-case e aggregati temporali.
+
+Il runner (`src/benchmark/runner.py`) emette eventi `case_start` e `case_done`, comprensivi di timing per-case e metadati utili al benchmarking architetturale.
 
 ### 4.4 Livello ingestion PDF / deterministic
 - `src/ingestion/hashing.py`  

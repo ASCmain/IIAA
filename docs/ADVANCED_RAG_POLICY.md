@@ -333,7 +333,7 @@ Questa distinzione evita sia l'esclusione eccessiva di fonti collegate, sia la p
 
 ---
 
-## 15. LLM evidence classifier in shadow mode
+## 15. LLM evidence classifier
 
 Il layer Advanced RAG include una fase opzionale di classificazione locale delle evidenze basata su LLM servito tramite Ollama.
 
@@ -347,8 +347,8 @@ Le classi previste sono:
 
 ### 15.2 Modalità operative
 - `off`: classificatore disattivato
-- `shadow`: il classificatore produce etichette e motivazioni, ma non modifica ancora la selezione finale
-- `assist`: modalità prevista per step successivi, in cui la classificazione potrà assistere il pruning o il bucket assignment
+- `shadow`: il classificatore produce etichette e motivazioni, ma non modifica la selezione finale
+- `assist`: il classificatore può assistere in modo conservativo il bucket assignment `core/context`, senza sostituire la source policy normativa
 
 ### 15.3 Razionale metodologico
 Questa soluzione consente di:
@@ -358,3 +358,64 @@ Questa soluzione consente di:
 
 ### 15.4 Principio di governance
 Nel project work, la decisione finale sulla priorità normativa resta al sistema di policy esplicita. Il classificatore LLM ha inizialmente funzione osservativa e comparativa.
+
+### 15.5 Vincolo di governance operativo
+Anche in modalità `assist`, il classificatore locale non promuove automaticamente una evidenza da `context` a `core` contro la logica conservativa del sistema. Il suo ruolo è ridurre rumore residuo e aiutare il bucket assignment senza alterare impropriamente la gerarchia normativa.
+
+---
+
+## 16. Analysis pool adattivo e threshold ladder
+
+Per corpus normativi molto estesi, il sistema non limita l'analisi al solo `top_k` finale. Prima dello split `core/context`, viene costruito un `analysis_pool` più ampio.
+
+### 16.1 Parametri principali
+- `analysis_pool_target`: ampiezza obiettivo del bacino di analisi
+- `min_candidate_floor`: soglia minima di candidati ritenuta accettabile
+- `threshold_fallback_ladder`: ladder di soglie degradabili per evitare eccessiva scarsità di fonti
+
+### 16.2 Razionale
+Nel caso IAS/IFRS, il testo consolidato UE può superare ampiamente il volume di un singolo standard o di una sola modifica regolamentare. Per quesiti interpretativi o numerici complessi, una selezione troppo stretta rischia di comprimere eccessivamente il contesto rilevante.
+
+Il sistema adotta quindi una sequenza:
+1. retrieval iniziale ampio
+2. reranking metadata-driven
+3. selezione di un `analysis_pool`
+4. pruning conservativo
+5. split `core/context`
+6. eventuale assistenza del classifier locale
+
+### 16.3 Effetto atteso
+Questa architettura consente di:
+- evitare risposte basate su un numero troppo ridotto di evidenze;
+- mantenere più contesto nei quesiti rule/numeric;
+- conservare tracciabilità delle soglie effettivamente usate.
+
+---
+
+## 17. Benchmark smoke e telemetria architetturale
+
+Lo smoke benchmark del project work non serve solo a verificare che il sistema “funzioni”, ma anche a osservare il comportamento architetturale della pipeline.
+
+### 17.1 Segnali tracciati
+Per ciascun case vengono tracciati almeno:
+- `question_type`
+- `source_preference`
+- `target_standards`
+- `analysis_pool_count`
+- `analysis_pool_target`
+- `threshold_effective`
+- `core_evidences_count`
+- `context_evidences_count`
+- `classifier_items_count`
+- `case_total_ms`
+
+### 17.2 Telemetria di run
+Il benchmark smoke produce:
+- artifact applicativi in `debug_dump/benchmark_runs/smoke_*/`
+- run telemetry in `telemetry/benchmark_smoke/run_*.json`
+
+### 17.3 Utilità metodologica
+Questa osservabilità rende il benchmark utile anche come base empirica per:
+- confronti tra configurazioni del classifier;
+- analisi del costo computazionale locale;
+- discussione metodologica in appendice tecnica.
