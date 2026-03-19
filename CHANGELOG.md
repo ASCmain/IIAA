@@ -31,3 +31,8 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 - emissione di run telemetry in `telemetry/benchmark_smoke/run_*.json`;
 - progress bar testuale per fasi e stampa risultati dello smoke run.
 
+
+### Added
+- telemetria live per singolo case nel benchmark smoke tramite callback `progress_cb` in `src/benchmark/runner.py`;
+- registrazione di eventi `case_start` e `case_done` con `case_total_ms` nel run telemetry.
+
