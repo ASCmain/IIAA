@@ -25,3 +25,9 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 - estesa la telemetria del benchmark smoke con metriche su retrieval, soglie adattive, analysis pool, classifier e tempi per fase;
 - migliorata la leggibilità diagnostica del run `smoke_*` per audit tecnico del layer Advanced RAG.
 
+
+### Added
+- integrazione della telemetria standard di progetto nello smoke benchmark (`apps/run_benchmark_smoke.py`);
+- emissione di run telemetry in `telemetry/benchmark_smoke/run_*.json`;
+- progress bar testuale per fasi e stampa risultati dello smoke run.
+
