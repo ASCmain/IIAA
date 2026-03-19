@@ -36,3 +36,7 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 - telemetria live per singolo case nel benchmark smoke tramite callback `progress_cb` in `src/benchmark/runner.py`;
 - registrazione di eventi `case_start` e `case_done` con `case_total_ms` nel run telemetry.
 
+
+### Added
+- arricchimento degli eventi `case_done` del benchmark smoke con segnali architetturali per-case (`question_type`, `source_preference`, `target_standards`, `analysis_pool_count`, `analysis_pool_target`, `threshold_effective`, `core_evidences_count`, `context_evidences_count`).
+
