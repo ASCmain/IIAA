@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, asdict
-from typing import Any, Dict, List
 
 
 @dataclass
 class QueryPlan:
     question_type: str
-    target_standards: List[str]
+    target_standards: list[str]
     source_preference: str
     needs_change_tracking: bool
     needs_transition_focus: bool
@@ -17,147 +15,126 @@ class QueryPlan:
     needs_consolidated_priority: bool
     needs_modifying_act_priority: bool
     suggested_top_k: int
-    notes: List[str]
+    analysis_pool_target: int
+    min_candidate_floor: int
+    threshold_fallback_ladder: list[float]
+    notes: list[str]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict:
         return asdict(self)
 
 
-_STANDARD_PATTERNS = [
-    ("IAS 36", [r"\bIAS\s*36\b", r"\bCGU\b", r"VALORE\s+RECUPERABILE", r"RIDUZIONE\s+DI\s+VALORE", r"IMPAIRMENT"]),
-    ("IFRS 9", [r"\bIFRS\s*9\b"]),
-    ("IFRS 7", [r"\bIFRS\s*7\b", r"DISCLOSURE", r"INFORMATIVA", r"TRANSIZIONE"]),
-    ("IFRS 13", [r"\bIFRS\s*13\b", r"FAIR\s+VALUE"]),
-    ("IFRS 1", [r"\bIFRS\s*1\b", r"FIRST[-\s]?TIME", r"PRIMA\s+ADOZIONE"]),
-]
+def _detect_target_standards(q: str) -> list[str]:
+    out: list[str] = []
+    q_up = q.upper()
 
-
-def _detect_target_standards(q: str) -> List[str]:
-    out: List[str] = []
-    for std, patterns in _STANDARD_PATTERNS:
-        for p in patterns:
-            if re.search(p, q, flags=re.IGNORECASE):
-                out.append(std)
-                break
-    # dedup preserve order
-    seen = set()
-    final = []
-    for x in out:
-        if x in seen:
-            continue
-        seen.add(x)
-        final.append(x)
-    return final
-
-
-def _looks_numeric(q: str) -> bool:
-    q_up = (q or "").upper()
-
-    strong_numeric_terms = [
-        "CALCOLA", "CALCOLARE", "COMPUTE", "CALCULATE",
-        "WACC", "DCF", "DISCOUNT", "DISCOUNT RATE",
-        "FLUSSI DI CASSA", "CASH FLOW", "CASH FLOWS",
-        "CARRYING AMOUNT", "VALORE CONTABILE",
-        "FAIR VALUE", "VALUE IN USE", "VALORE D'USO",
-        "TASSO DI ATTUALIZZAZIONE", "TASSO",
-        "PERCENT", "%", "€", "EUR", "USD"
+    candidates = [
+        "IAS 1", "IAS 2", "IAS 7", "IAS 8", "IAS 12", "IAS 16", "IAS 19", "IAS 36", "IAS 37", "IAS 38",
+        "IFRS 1", "IFRS 2", "IFRS 3", "IFRS 7", "IFRS 9", "IFRS 10", "IFRS 13", "IFRS 15", "IFRS 16", "IFRS 17",
+        "IFRIC 10", "IFRIC 19", "SIC 7",
     ]
-    if any(t in q_up for t in strong_numeric_terms):
-        return True
-
-    # remove common regulatory / standard identifiers before checking residual numbers
-    scrubbed = q_up
-    scrub_patterns = [
-        r"\bIAS\s*\d+\b",
-        r"\bIFRS\s*\d+\b",
-        r"\bIFRIC\s*\d+\b",
-        r"\bSIC\s*\d+\b",
-        r"\b20\d{2}/\d{3,4}\b",         # e.g. 2025/1266
-        r"\bCELEX:\d+[A-Z]?\d+\b",
-        r"\bPARAGRAF[OA]\s+\d+([.,]\d+)*\b",
-        r"\b\d+([.,]\d+)*\b(?=\s*[A-Z]\b)",  # weak guard for numbered article-like refs
-    ]
-    for p in scrub_patterns:
-        scrubbed = re.sub(p, " ", scrubbed, flags=re.IGNORECASE)
-
-    residual_numbers = re.findall(r"\b\d+[.,]?\d*\b", scrubbed)
-
-    # Require at least two residual numbers to consider it plausibly computational
-    # when no strong numeric term is present.
-    return len(residual_numbers) >= 2
+    for c in candidates:
+        if c in q_up:
+            out.append(c)
+    return out
 
 
 def build_query_plan(query: str) -> QueryPlan:
     q = (query or "").strip()
     q_up = q.upper()
+    notes: list[str] = []
+    targets = _detect_target_standards(q_up)
 
-    target_standards = _detect_target_standards(q)
-    needs_numeric_reasoning = _looks_numeric(q)
+    is_change = any(x in q_up for x in [
+        "MODIFIC", "CHANGE", "AGGIORN", "UPDATE", "REGOLAMENTO UE", "REGULATION", "2025/1266", "32025R1266"
+    ])
+    is_transition = any(x in q_up for x in [
+        "TRANSIZIONE", "TRANSITION", "DISCLOSURE", "INFORMATIVA"
+    ])
+    is_numeric = any(x in q_up for x in [
+        "CALCOL", "COMPUT", "NUMERIC", "VALORE D'USO", "VALUE IN USE", "FAIR VALUE",
+        "ATTUALIZZ", "DISCOUNT", "WACC", "TASSO"
+    ])
 
-    mentions_modifying_act = (
-        "REGOLAMENTO" in q_up and
-        ("2025/1266" in q_up or "32025R1266" in q_up or re.search(r"\b20\d{2}/\d{3,4}\b", q_up) is not None)
-    )
-
-    asks_for_changes = any(x in q_up for x in ["MODIFICHE", "CAMBIAMENTI", "INTRODUCE", "MODIFICA", "CHANGE", "AMEND"])
-    asks_transition = any(x in q_up for x in ["TRANSIZIONE", "TRANSITION"])
-    asks_disclosure = any(x in q_up for x in ["DISCLOSURE", "INFORMATIVA"])
-    asks_definition = any(x in q_up for x in ["COSA SI INTENDE", "DEFINIZIONE", "DEFINE", "WHAT IS"])
-    asks_compare = any(x in q_up for x in ["CONFRONTA", "DIFFERENZA", "VERSUS", "VS", "COMPARE"])
-
-    if needs_numeric_reasoning and asks_definition:
-        question_type = "mixed_numeric_interpretive"
-    elif needs_numeric_reasoning:
-        question_type = "numeric_calculation"
-    elif asks_transition or asks_disclosure:
-        question_type = "transition_disclosure"
-    elif mentions_modifying_act and asks_for_changes:
-        question_type = "change_analysis"
-    elif asks_compare:
-        question_type = "comparison"
-    elif asks_definition:
-        question_type = "definition"
-    else:
-        question_type = "rule_interpretation"
-
-    needs_modifying_act_priority = mentions_modifying_act and (
-        asks_for_changes or asks_transition or asks_disclosure
-    )
-    needs_consolidated_priority = not needs_modifying_act_priority
-    needs_change_tracking = needs_modifying_act_priority
-    needs_transition_focus = asks_transition
-    needs_disclosure_focus = asks_disclosure
-
-    if question_type in {"numeric_calculation", "mixed_numeric_interpretive"}:
-        source_preference = "consolidated_first"
-        suggested_top_k = 6
-    elif needs_modifying_act_priority:
-        source_preference = "modifying_act_first_then_consolidated"
-        suggested_top_k = 8
-    else:
-        source_preference = "consolidated_first"
-        suggested_top_k = 6
-
-    notes: List[str] = []
-    if needs_modifying_act_priority:
+    if is_change and is_transition:
         notes.append("Prioritise modifying act because the query explicitly asks about regulatory changes.")
-    if needs_consolidated_priority:
-        notes.append("Use consolidated text as default source of current operative rule.")
-    if needs_numeric_reasoning:
-        notes.append("Numeric reasoning required: prefer rule grounding before calculation scaffolding.")
-    if target_standards:
-        notes.append("Detected target standards: " + ", ".join(target_standards))
+        if targets:
+            notes.append(f"Detected target standards: {', '.join(targets)}")
+        return QueryPlan(
+            question_type="transition_disclosure",
+            target_standards=targets,
+            source_preference="modifying_act_first_then_consolidated",
+            needs_change_tracking=True,
+            needs_transition_focus=True,
+            needs_disclosure_focus=True,
+            needs_numeric_reasoning=False,
+            needs_consolidated_priority=False,
+            needs_modifying_act_priority=True,
+            suggested_top_k=8,
+            analysis_pool_target=12,
+            min_candidate_floor=8,
+            threshold_fallback_ladder=[0.78, 0.74, 0.70, 0.65, 0.60],
+            notes=notes,
+        )
 
+    if is_change:
+        notes.append("Prioritise modifying act because the query explicitly asks about regulatory changes.")
+        if targets:
+            notes.append(f"Detected target standards: {', '.join(targets)}")
+        return QueryPlan(
+            question_type="change_analysis",
+            target_standards=targets,
+            source_preference="modifying_act_first_then_consolidated",
+            needs_change_tracking=True,
+            needs_transition_focus=False,
+            needs_disclosure_focus=False,
+            needs_numeric_reasoning=False,
+            needs_consolidated_priority=False,
+            needs_modifying_act_priority=True,
+            suggested_top_k=8,
+            analysis_pool_target=12,
+            min_candidate_floor=8,
+            threshold_fallback_ladder=[0.79, 0.75, 0.70, 0.65, 0.60],
+            notes=notes,
+        )
+
+    if is_numeric:
+        notes.append("Use consolidated text as default source of current operative rule.")
+        if targets:
+            notes.append(f"Detected target standards: {', '.join(targets)}")
+        return QueryPlan(
+            question_type="numeric_calculation",
+            target_standards=targets,
+            source_preference="consolidated_first",
+            needs_change_tracking=False,
+            needs_transition_focus=False,
+            needs_disclosure_focus=False,
+            needs_numeric_reasoning=True,
+            needs_consolidated_priority=True,
+            needs_modifying_act_priority=False,
+            suggested_top_k=7,
+            analysis_pool_target=18,
+            min_candidate_floor=12,
+            threshold_fallback_ladder=[0.70, 0.68, 0.65, 0.62, 0.60],
+            notes=notes,
+        )
+
+    notes.append("Use consolidated text as default source of current operative rule.")
+    if targets:
+        notes.append(f"Detected target standards: {', '.join(targets)}")
     return QueryPlan(
-        question_type=question_type,
-        target_standards=target_standards,
-        source_preference=source_preference,
-        needs_change_tracking=needs_change_tracking,
-        needs_transition_focus=needs_transition_focus,
-        needs_disclosure_focus=needs_disclosure_focus,
-        needs_numeric_reasoning=needs_numeric_reasoning,
-        needs_consolidated_priority=needs_consolidated_priority,
-        needs_modifying_act_priority=needs_modifying_act_priority,
-        suggested_top_k=suggested_top_k,
+        question_type="rule_interpretation",
+        target_standards=targets,
+        source_preference="consolidated_first",
+        needs_change_tracking=False,
+        needs_transition_focus=False,
+        needs_disclosure_focus=False,
+        needs_numeric_reasoning=False,
+        needs_consolidated_priority=True,
+        needs_modifying_act_priority=False,
+        suggested_top_k=6,
+        analysis_pool_target=16,
+        min_candidate_floor=12,
+        threshold_fallback_ladder=[0.72, 0.69, 0.66, 0.63, 0.60],
         notes=notes,
     )

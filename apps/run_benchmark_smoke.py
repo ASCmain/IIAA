@@ -68,14 +68,33 @@ def main() -> int:
     def assess_result(r):
         answer = r.answer or ""
         labels = [c.get("cite_key") for c in (r.citations or []) if c.get("cite_key")]
+        classifier_items = getattr(r, "classifier_items", []) or []
+        label_counts = {}
+        for item in classifier_items:
+            label = item.get("label") or "unknown"
+            label_counts[label] = label_counts.get(label, 0) + 1
+
         return {
             "case_id": r.case_id,
             "question_type": (r.query_plan or {}).get("question_type"),
             "source_preference": (r.query_plan or {}).get("source_preference"),
             "needs_numeric_reasoning": (r.query_plan or {}).get("needs_numeric_reasoning"),
             "target_standards": (r.query_plan or {}).get("target_standards"),
+            "retrieval_raw_count": getattr(r, "retrieval_raw_count", 0),
+            "retrieval_above_initial_threshold_count": getattr(r, "retrieval_above_initial_threshold_count", 0),
+            "analysis_pool_count": getattr(r, "analysis_pool_count", 0),
+            "analysis_pool_target": getattr(r, "analysis_pool_target", 0),
+            "min_candidate_floor": getattr(r, "min_candidate_floor", 0),
+            "threshold_initial": getattr(r, "threshold_initial", None),
+            "threshold_effective": getattr(r, "threshold_effective", None),
+            "coverage_warning_low_candidate_count": getattr(r, "coverage_warning_low_candidate_count", False),
             "core_evidences_count": (r.query_plan or {}).get("core_evidences_count"),
             "context_evidences_count": (r.query_plan or {}).get("context_evidences_count"),
+            "classifier_mode": getattr(r, "classifier_mode", ""),
+            "classifier_model": getattr(r, "classifier_model", ""),
+            "classifier_items_count": getattr(r, "classifier_items_count", 0),
+            "classifier_label_counts": label_counts,
+            "telemetry_timing_ms": getattr(r, "telemetry_timing_ms", {}),
             "citations_count": len(r.citations or []),
             "evidences_count": len(r.evidences or []),
             "has_celex_32025R1266": "CELEX:32025R1266" in labels or "CELEX:32025R1266" in answer,

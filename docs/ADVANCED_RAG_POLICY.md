@@ -265,3 +265,96 @@ L'obiettivo è costruire prompt grounded con due livelli di rilevanza:
    - standard contigui necessari a evitare errori interpretativi
 
 Questa distinzione consentirà di aumentare il contesto disponibile senza perdere il controllo sulla priorità logica delle fonti.
+
+
+---
+
+## 14. Source hierarchy metadata-driven
+
+L'evoluzione successiva del layer Advanced RAG introduce una gerarchia delle evidenze basata su metadata reali del corpus, anziché solo su similarità vettoriale.
+
+### 14.1 Doppio asse della gerarchia
+
+La gerarchia è costruita su due assi distinti:
+
+#### A. Legal tier
+Esprime la forza giuridica o il ruolo normativo della fonte nel contesto UE.
+
+Esempi:
+- `eu_modifying_act`
+- `eu_consolidated_reference`
+- `other_or_unknown`
+
+#### B. Semantic tier
+Esprime la funzione logico-contabile della fonte.
+
+Esempi:
+- `target_standard`
+- `official_interpretation`
+- `framework_concept`
+- `related_or_support`
+
+### 14.2 Razionale
+
+Una singola gerarchia lineare sarebbe fuorviante, perché una fonte può avere:
+- alta rilevanza giuridica ma funzione descrittiva limitata;
+- alta utilità interpretativa ma non essere la fonte primaria da privilegiare come base della risposta.
+
+Per questo il sistema combina:
+- stato giuridico della fonte;
+- ruolo contabile della fonte;
+- relazione con lo standard target della query.
+
+### 14.3 Applicazione pratica
+
+#### Change analysis / transition-disclosure
+Priorità tipica:
+1. atto modificativo UE
+2. testo consolidato UE vigente
+3. paragrafi dello standard target
+4. interpretazioni ufficiali solo se necessarie
+5. supporto laterale
+
+#### Rule interpretation / numeric
+Priorità tipica:
+1. testo consolidato UE vigente dello standard target
+2. paragrafi definitori / recognition / measurement del target
+3. standard strettamente collegati come context
+4. interpretazioni o supporti secondari
+
+### 14.4 Esempio metodologico: IAS 36 e IAS 38
+
+IAS 38.110/111 non è rumore puro rispetto a IAS 36: costituisce un collegamento normativo reale in materia di impairment delle attività immateriali. Tuttavia, in una query generale sul valore recuperabile di una CGU:
+- `IAS 36` deve restare `core`
+- `IAS 38.110/111` deve tendere a essere `context`
+
+Questa distinzione evita sia l'esclusione eccessiva di fonti collegate, sia la promozione indebita di fonti non principali a base della risposta.
+
+
+---
+
+## 15. LLM evidence classifier in shadow mode
+
+Il layer Advanced RAG include una fase opzionale di classificazione locale delle evidenze basata su LLM servito tramite Ollama.
+
+### 15.1 Finalità
+L'obiettivo del classificatore non è sostituire la gerarchia normativa o metadata-driven, ma fornire un secondo giudizio semantico locale sulle evidenze candidate.
+
+Le classi previste sono:
+- `core`
+- `context`
+- `exclude`
+
+### 15.2 Modalità operative
+- `off`: classificatore disattivato
+- `shadow`: il classificatore produce etichette e motivazioni, ma non modifica ancora la selezione finale
+- `assist`: modalità prevista per step successivi, in cui la classificazione potrà assistere il pruning o il bucket assignment
+
+### 15.3 Razionale metodologico
+Questa soluzione consente di:
+- ridurre progressivamente le euristiche rigide;
+- introdurre un livello di giudizio semantico locale;
+- mantenere comunque un controllo forte da parte della source policy normativa.
+
+### 15.4 Principio di governance
+Nel project work, la decisione finale sulla priorità normativa resta al sistema di policy esplicita. Il classificatore LLM ha inizialmente funzione osservativa e comparativa.

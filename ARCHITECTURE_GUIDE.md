@@ -113,6 +113,23 @@ Il livello RAG è stato esteso con una politica esplicita di query planning e so
 
 Questa logica è descritta in modo esteso in `docs/ADVANCED_RAG_POLICY.md`.
 
+La source policy è ora orientata anche da una gerarchia metadata-driven a doppio asse:
+- `legal_tier`: ruolo giuridico della fonte nel contesto UE (atto modificativo, consolidato, ecc.)
+- `semantic_tier`: ruolo contabile della fonte (standard target, interpretazione ufficiale, supporto, ecc.)
+
+Questo consente di distinguere meglio:
+- fonte legalmente primaria;
+- fonte concettualmente centrale;
+- fonte collegata ma solo contestuale.
+
+
+È inoltre previsto un classificatore locale delle evidenze (`src/rag/evidence_classifier.py`) servito tramite Ollama:
+- in modalità iniziale `shadow`
+- con output strutturato `core/context/exclude`
+- usato per confronto e telemetria prima dell'eventuale promozione a componente assistiva del pruning
+
+
+
 - `src/rag/models.py`  
   Modelli di dominio del retrieval, es. `Evidence`.
 - `src/rag/ollama_io.py`  
