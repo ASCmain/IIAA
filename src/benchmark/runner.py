@@ -82,6 +82,9 @@ def run_benchmark_cases(
             classifier_items=payload.get("classifier_items") or [],
             classifier_items_count=payload.get("classifier_items_count") or 0,
             classifier_raw_response=payload.get("classifier_raw_response") or "",
+            used_citations=payload.get("used_citations") or [],
+            used_citations_count=payload.get("used_citations_count") or 0,
+            citation_candidates_count=payload.get("citation_candidates_count") or 0,
             telemetry_timing_ms={
                 **(payload.get("telemetry_timing_ms") or {}),
                 "case_total_ms": case_duration_ms,
@@ -113,6 +116,8 @@ def run_benchmark_cases(
                     "citations_count": len(result.citations or []),
                     "evidences_count": len(result.evidences or []),
                     "classifier_items_count": result.classifier_items_count,
+                    "used_citations_count": result.used_citations_count,
+                    "citation_candidates_count": result.citation_candidates_count,
                     "answer_len": len(result.answer or ""),
                     "case_total_ms": case_duration_ms,
                     "telemetry_timing_ms": result.telemetry_timing_ms,

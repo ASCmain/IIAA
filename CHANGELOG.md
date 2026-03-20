@@ -46,3 +46,9 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 - aggregati sintetici nel `summary.json` dello smoke benchmark (`question_type_counts`, statistiche `case_total_ms`);
 - allineamento documentale di `ARCHITECTURE_GUIDE.md` e `docs/ADVANCED_RAG_POLICY.md` rispetto a classifier locale, analysis pool adattivo e benchmark telemetry.
 
+
+### Added
+- distinzione tra `citations` candidate e `used_citations` effettivamente richiamate nel testo finale;
+- nuovi segnali `used_citations_count` e `citation_candidates_count` nel benchmark smoke;
+- visualizzazione in UI delle citazioni effettivamente usate per migliorare la citation fidelity.
+

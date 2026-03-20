@@ -50,6 +50,9 @@ def main() -> None:
 
     embed_model = os.getenv("OLLAMA_EMBED_MODEL", "mxbai-embed-large")
     chat_model = os.getenv("OLLAMA_CHAT_MODEL", os.getenv("OLLAMA_MODEL", "mistral"))
+    focus_detection_mode = os.getenv("FOCUS_DETECTION_MODE", "off")
+    focus_detection_model = os.getenv("FOCUS_DETECTION_MODEL", "")
+    focus_catalog = os.getenv("FOCUS_CATALOG_PATH", "config/focus_catalog_ifrs.json")
 
     st.sidebar.header("Runtime controls")
 
@@ -94,6 +97,9 @@ def main() -> None:
                     "OLLAMA_BASE_URL": ollama_base_url,
                     "OLLAMA_EMBED_MODEL": embed_model,
                     "OLLAMA_CHAT_MODEL": chat_model,
+                    "FOCUS_DETECTION_MODE": focus_detection_mode,
+                    "FOCUS_DETECTION_MODEL": focus_detection_model,
+                    "FOCUS_CATALOG_PATH": focus_catalog,
                 }
             )
 
@@ -145,6 +151,9 @@ def main() -> None:
 
                 st.markdown("Risposta")
                 st.write(payload.get("answer") or "")
+
+                st.markdown("Used citations (effective)")
+                st.json(payload.get("used_citations") or [])
 
                 st.markdown("Citations (readable)")
                 cits = payload.get("citations") or []
@@ -203,6 +212,10 @@ def main() -> None:
             st.markdown("Payload (raw)")
             if payload:
                 st.json(payload)
+                st.markdown("Query plan")
+                st.json(payload.get("query_plan") or {})
+                st.markdown("Focus detection")
+                st.json(payload.get("focus_detection_result") or {})
             else:
                 st.info("Esegui una query nel tab Ask per vedere il payload.")
         with col2:

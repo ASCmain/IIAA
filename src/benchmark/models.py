@@ -41,6 +41,9 @@ class BenchmarkRunResult:
     classifier_items: List[Dict[str, Any]]
     classifier_items_count: int
     classifier_raw_response: str
+    used_citations: List[Dict[str, Any]]
+    used_citations_count: int
+    citation_candidates_count: int
     telemetry_timing_ms: Dict[str, Any]
     citations: List[Dict[str, Any]]
     evidences: List[Dict[str, Any]]

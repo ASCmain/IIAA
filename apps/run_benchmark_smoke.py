@@ -12,7 +12,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from qdrant_client import QdrantClient
 
-from src.benchmark import BenchmarkCase, run_benchmark_cases, write_json, write_jsonl
+from src.benchmark import BenchmarkCase, load_benchmark_cases, run_benchmark_cases, write_json, write_jsonl
 from src.telemetry import TelemetryRecorder
 
 
@@ -64,6 +64,8 @@ def _make_progress_cb(telemetry):
                 citations_count=info.get("citations_count"),
                 evidences_count=info.get("evidences_count"),
                 classifier_items_count=info.get("classifier_items_count"),
+                used_citations_count=info.get("used_citations_count"),
+                citation_candidates_count=info.get("citation_candidates_count"),
                 answer_len=info.get("answer_len"),
                 case_total_ms=info.get("case_total_ms"),
             )
@@ -90,32 +92,8 @@ def main() -> int:
     out_dir = Path("debug_dump/benchmark_runs") / f"smoke_{run_id}"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    cases = [
-        BenchmarkCase(
-            case_id="pw_ifrs9_7_reg_2025_1266_main_changes",
-            label="UE 2025/1266 - modifiche principali IFRS 9/7",
-            query="Quali sono le modifiche principali del regolamento UE 2025/1266 relative a IFRS 9 e IFRS 7?",
-            lang_mode="IT",
-            top_k=5,
-            temperature=0.0,
-        ),
-        BenchmarkCase(
-            case_id="pw_ifrs7_reg_2025_1266_disclosure_transition",
-            label="UE 2025/1266 - disclosure/transizione IFRS 7",
-            query="Il regolamento UE 2025/1266 introduce cambiamenti rilevanti per disclosure o transizione di IFRS 7? Rispondi in modo prudente e indica le fonti.",
-            lang_mode="IT",
-            top_k=5,
-            temperature=0.0,
-        ),
-        BenchmarkCase(
-            case_id="pw_ias36_mvp_smoke",
-            label="IAS 36 - smoke continuity",
-            query="Ai sensi dello IAS 36, come si determina in sintesi il valore recuperabile di una CGU e quando si rileva una perdita di valore?",
-            lang_mode="IT",
-            top_k=5,
-            temperature=0.0,
-        ),
-    ]
+    cases_path = os.environ.get("BENCHMARK_CASES_FILE", "config/benchmark_cases_core.json")
+    cases = load_benchmark_cases(cases_path)
 
     telemetry = TelemetryRecorder(step="benchmark_smoke")
     telemetry.start(
@@ -194,6 +172,8 @@ def main() -> int:
             "classifier_model": getattr(r, "classifier_model", ""),
             "classifier_items_count": getattr(r, "classifier_items_count", 0),
             "classifier_label_counts": label_counts,
+            "used_citations_count": getattr(r, "used_citations_count", 0),
+            "citation_candidates_count": getattr(r, "citation_candidates_count", 0),
             "telemetry_timing_ms": getattr(r, "telemetry_timing_ms", {}),
             "citations_count": len(r.citations or []),
             "evidences_count": len(r.evidences or []),
@@ -245,6 +225,8 @@ def main() -> int:
             evidences_count=len(r.evidences or []),
             answer_len=len(r.answer or ""),
             classifier_items_count=getattr(r, "classifier_items_count", 0),
+            used_citations_count=getattr(r, "used_citations_count", 0),
+            citation_candidates_count=getattr(r, "citation_candidates_count", 0),
         )
 
         print(f"\n=== {r.case_id} ===")

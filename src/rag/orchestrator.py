@@ -13,6 +13,7 @@ from .retrieval import retrieve
 from .query_planning import build_query_plan
 from .source_policy import filter_evidences_for_plan, rerank_evidences_for_plan, split_core_and_context_for_plan, prune_evidences_for_plan, effective_threshold_for_plan, select_analysis_pool_for_plan
 from .evidence_classifier import classify_evidences_with_llm, evidence_classifier_mode, evidence_classifier_model
+from .focus_detection import detect_focus_with_llm, focus_detection_mode, focus_detection_model, focus_catalog_path
 
 
 
@@ -95,6 +96,31 @@ def _apply_classifier_assist(core_evidences, context_evidences, classifier_items
     return dedup_core, dedup_context
 
 
+def _extract_used_citations(answer: str, citations: list[dict]) -> list[dict]:
+    answer = str(answer or "")
+    if not answer or not citations:
+        return []
+
+    by_key = {}
+    ordered_keys = []
+    for c in citations:
+        key = str((c or {}).get("cite_key") or "").strip()
+        if not key:
+            continue
+        if key not in by_key:
+            by_key[key] = c
+            ordered_keys.append(key)
+
+    matches = []
+    for key in ordered_keys:
+        pos = answer.find(key)
+        if pos >= 0:
+            matches.append((pos, key))
+
+    matches.sort(key=lambda x: x[0])
+    return [by_key[key] for _, key in matches]
+
+
 def run_query(
     query: str,
     *,
@@ -124,6 +150,29 @@ def run_query(
     collection = collection_it if lang == "IT" else collection_en
 
     plan = build_query_plan(q)
+
+    focus_mode = focus_detection_mode()
+    focus_output = {
+        "catalog_version": "",
+        "primary_standards": [],
+        "secondary_standards": [],
+        "topic_axes": [],
+        "intent_axes": [],
+        "confidence": "low",
+        "ambiguity_flags": [],
+        "parse_error": "",
+        "raw_response": "",
+        "model": "",
+    }
+    if focus_mode in {"shadow", "assist"}:
+        focus_output = detect_focus_with_llm(
+            query=q,
+            plan=plan.to_dict(),
+            ollama_base_url=ollama_base_url,
+            classifier_model=focus_detection_model(chat_model),
+            answer_language=lang,
+            catalog_path=focus_catalog_path(),
+        )
     retrieval_pool_k = max(int(top_k), int(plan.suggested_top_k), int(plan.analysis_pool_target), 24)
 
     t_embed0 = time.perf_counter()
@@ -227,11 +276,25 @@ def run_query(
             }
         )
 
+    used_citations = _extract_used_citations(answer, citations)
+
     return {
         "answer": answer,
         "lang": lang,
         "collection": collection,
         "query_plan": plan.to_dict(),
+        "focus_detection_mode": focus_mode,
+        "focus_detection_model": focus_output.get("model") or "",
+        "focus_catalog_version": focus_output.get("catalog_version") or "",
+        "focus_detection_result": {
+            "primary_standards": focus_output.get("primary_standards") or [],
+            "secondary_standards": focus_output.get("secondary_standards") or [],
+            "topic_axes": focus_output.get("topic_axes") or [],
+            "intent_axes": focus_output.get("intent_axes") or [],
+            "confidence": focus_output.get("confidence") or "low",
+            "ambiguity_flags": focus_output.get("ambiguity_flags") or [],
+            "parse_error": focus_output.get("parse_error") or "",
+        },
         "retrieval_raw_count": retrieval_raw_count,
         "retrieval_above_initial_threshold_count": len(above_initial),
         "analysis_pool_count": analysis_selection.get("analysis_pool_count"),
@@ -247,6 +310,9 @@ def run_query(
         "classifier_items": classifier_output.get("items") or [],
         "classifier_items_count": len(classifier_output.get("items") or []),
         "classifier_raw_response": classifier_output.get("raw_response") or "",
+        "used_citations": used_citations,
+        "used_citations_count": len(used_citations),
+        "citation_candidates_count": len(citations),
         "telemetry_timing_ms": {
             "embed_ms": embed_ms,
             "retrieve_ms": retrieve_ms,

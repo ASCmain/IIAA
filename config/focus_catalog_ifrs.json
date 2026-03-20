@@ -1,0 +1,93 @@
+{
+  "catalog_version": "0.1.0",
+  "description": "Catalogo dominio iniziale per focus detection IFRS/IAS, revisionabile da professionista.",
+  "standards": [
+    {
+      "id": "IFRS 1",
+      "aliases": ["IFRS1", "first-time adoption", "prima adozione", "first time adopter"],
+      "topic_axes": [
+        "first_time_adoption",
+        "exemptions",
+        "deemed_cost",
+        "transition",
+        "opening_ifrs_balance_sheet"
+      ],
+      "related_standards": ["IFRS 9", "IFRS 7", "IAS 36", "IFRS 13"]
+    },
+    {
+      "id": "IFRS 7",
+      "aliases": ["IFRS7", "disclosure strumenti finanziari", "informativa strumenti finanziari"],
+      "topic_axes": [
+        "credit_risk_disclosure",
+        "liquidity_risk",
+        "market_risk",
+        "sensitivity_analysis",
+        "risk_concentrations",
+        "transition_disclosure"
+      ],
+      "related_standards": ["IFRS 9", "IFRS 13", "IFRS 1"]
+    },
+    {
+      "id": "IFRS 9",
+      "aliases": ["IFRS9", "strumenti finanziari", "financial instruments"],
+      "topic_axes": [
+        "business_model",
+        "sppi",
+        "measurement_category",
+        "ecl",
+        "sicr",
+        "derecognition",
+        "hedge_accounting",
+        "transition"
+      ],
+      "related_standards": ["IFRS 7", "IFRS 13", "IFRS 1"]
+    },
+    {
+      "id": "IFRS 13",
+      "aliases": ["IFRS13", "fair value", "valore equo"],
+      "topic_axes": [
+        "fair_value_measurement",
+        "valuation_techniques",
+        "market_participants",
+        "level_hierarchy",
+        "fair_value_disclosure"
+      ],
+      "related_standards": ["IFRS 9", "IFRS 7", "IAS 36", "IFRS 1"]
+    },
+    {
+      "id": "IAS 36",
+      "aliases": ["IAS36", "impairment", "riduzione di valore", "recoverable amount", "valore recuperabile"],
+      "topic_axes": [
+        "impairment_indicators",
+        "recoverable_amount",
+        "value_in_use",
+        "fair_value_less_costs_of_disposal",
+        "cgu",
+        "goodwill",
+        "reversal_of_impairment",
+        "impairment_disclosure"
+      ],
+      "related_standards": ["IAS 38", "IFRS 13", "IFRS 1"]
+    },
+    {
+      "id": "IAS 38",
+      "aliases": ["IAS38", "intangible assets", "attività immateriali"],
+      "topic_axes": [
+        "intangible_assets",
+        "useful_life",
+        "amortisation",
+        "impairment_link"
+      ],
+      "related_standards": ["IAS 36", "IFRS 13"]
+    }
+  ],
+  "intent_axes": [
+    "definition",
+    "technical_assessment",
+    "professional_judgment",
+    "disclosure_check",
+    "transition_check",
+    "numeric_reasoning"
+  ],
+  "confidence_levels": ["high", "medium", "low"]
+}
