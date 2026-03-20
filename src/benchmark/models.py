@@ -24,6 +24,8 @@ class BenchmarkRunResult:
     case_id: str
     label: str
     query: str
+    status: str
+    error: str
     answer: str
     lang: str
     collection: str

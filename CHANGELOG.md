@@ -52,3 +52,9 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 - nuovi segnali `used_citations_count` e `citation_candidates_count` nel benchmark smoke;
 - visualizzazione in UI delle citazioni effettivamente usate per migliorare la citation fidelity.
 
+
+### Added
+- persistenza append-only per-case dei risultati benchmark in `results.jsonl`;
+- supporto a esecuzione selettiva dei casi con `BENCHMARK_CASE_IDS`;
+- supporto a `BENCHMARK_FAIL_FAST` per decidere se interrompere o proseguire dopo errori per-case.
+

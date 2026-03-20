@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from typing import Any, Callable, Dict, Iterable, List
+import traceback
 
 from qdrant_client import QdrantClient
 
@@ -21,8 +22,12 @@ def run_benchmark_cases(
     embed_model: str,
     chat_model: str,
     progress_cb: ProgressCallback | None = None,
+    selected_case_ids: set[str] | None = None,
+    fail_fast: bool = True,
 ) -> List[BenchmarkRunResult]:
     case_list = list(cases)
+    if selected_case_ids:
+        case_list = [c for c in case_list if c.case_id in selected_case_ids]
     out: List[BenchmarkRunResult] = []
     total = len(case_list)
 
@@ -41,29 +46,32 @@ def run_benchmark_cases(
             )
 
         t0 = time.perf_counter()
-        payload = run_query(
-            case.query,
-            qdrant_client=qdrant_client,
-            collection_it=collection_it,
-            collection_en=collection_en,
-            ollama_base_url=ollama_base_url,
-            embed_model=embed_model,
-            chat_model=chat_model,
-            lang_mode=case.lang_mode,
-            top_k=case.top_k,
-            score_threshold=case.score_threshold,
-            embed_max_chars=case.embed_max_chars,
-            temperature=case.temperature,
-        )
-        case_duration_ms = int((time.perf_counter() - t0) * 1000)
+        try:
+            payload = run_query(
+                case.query,
+                qdrant_client=qdrant_client,
+                collection_it=collection_it,
+                collection_en=collection_en,
+                ollama_base_url=ollama_base_url,
+                embed_model=embed_model,
+                chat_model=chat_model,
+                lang_mode=case.lang_mode,
+                top_k=case.top_k,
+                score_threshold=case.score_threshold,
+                embed_max_chars=case.embed_max_chars,
+                temperature=case.temperature,
+            )
+            case_duration_ms = int((time.perf_counter() - t0) * 1000)
 
-        result = BenchmarkRunResult(
-            case_id=case.case_id,
-            label=case.label,
-            query=case.query,
-            answer=payload.get("answer") or "",
-            lang=payload.get("lang") or "",
-            collection=payload.get("collection") or "",
+            result = BenchmarkRunResult(
+                case_id=case.case_id,
+                label=case.label,
+                query=case.query,
+                status="ok",
+                error="",
+                answer=payload.get("answer") or "",
+                lang=payload.get("lang") or "",
+                collection=payload.get("collection") or "",
             query_plan={
                 **(payload.get("query_plan") or {}),
                 "core_evidences_count": payload.get("core_evidences_count"),
@@ -93,12 +101,12 @@ def run_benchmark_cases(
             evidences=payload.get("evidences") or [],
         )
 
-        out.append(result)
+            out.append(result)
 
-        if progress_cb is not None:
-            progress_cb(
-                {
-                    "event": "case_done",
+            if progress_cb is not None:
+                progress_cb(
+                    {
+                        "event": "case_done",
                     "idx": idx,
                     "total": total,
                     "case_id": result.case_id,
@@ -122,6 +130,57 @@ def run_benchmark_cases(
                     "case_total_ms": case_duration_ms,
                     "telemetry_timing_ms": result.telemetry_timing_ms,
                 }
+                )
+        except Exception as e:
+            case_duration_ms = int((time.perf_counter() - t0) * 1000)
+            err = f"{type(e).__name__}: {e}"
+            result = BenchmarkRunResult(
+                case_id=case.case_id,
+                label=case.label,
+                query=case.query,
+                status="error",
+                error=err,
+                answer="",
+                lang=case.lang_mode,
+                collection=collection_it if case.lang_mode == "IT" else collection_en,
+                query_plan={},
+                retrieval_raw_count=0,
+                retrieval_above_initial_threshold_count=0,
+                analysis_pool_count=0,
+                analysis_pool_target=0,
+                min_candidate_floor=0,
+                threshold_initial=None,
+                threshold_effective=None,
+                coverage_warning_low_candidate_count=False,
+                classifier_mode="",
+                classifier_model="",
+                classifier_items=[],
+                classifier_items_count=0,
+                classifier_raw_response="",
+                used_citations=[],
+                used_citations_count=0,
+                citation_candidates_count=0,
+                telemetry_timing_ms={"case_total_ms": case_duration_ms},
+                citations=[],
+                evidences=[],
             )
+            out.append(result)
+
+            if progress_cb is not None:
+                progress_cb(
+                    {
+                        "event": "case_error",
+                        "idx": idx,
+                        "total": total,
+                        "case_id": case.case_id,
+                        "label": case.label,
+                        "error": err,
+                        "case_total_ms": case_duration_ms,
+                        "traceback_tail": traceback.format_exc()[-1200:],
+                    }
+                )
+
+            if fail_fast:
+                raise
 
     return out

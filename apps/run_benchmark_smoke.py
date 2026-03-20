@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import sys
 import subprocess
@@ -35,6 +36,13 @@ def _print_progress(current: int, total: int, label: str) -> None:
     filled = int(width * current / total)
     bar = "#" * filled + "-" * (width - filled)
     print(f"[{bar}] {current}/{total} {label}")
+
+
+
+def _append_jsonl(path: Path, row: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 def _make_progress_cb(telemetry):
@@ -74,6 +82,20 @@ def _make_progress_cb(telemetry):
                 int(info.get("total") or 1),
                 f"case completato: {info.get('case_id')} ({info.get('case_total_ms')} ms)",
             )
+        elif event == "case_error":
+            telemetry.event(
+                "case_error",
+                case_id=info.get("case_id"),
+                idx=info.get("idx"),
+                total=info.get("total"),
+                error=info.get("error"),
+                case_total_ms=info.get("case_total_ms"),
+            )
+            _print_progress(
+                int(info.get("idx") or 0),
+                int(info.get("total") or 1),
+                f"case in errore: {info.get('case_id')} ({info.get('case_total_ms')} ms)",
+            )
     return _cb
 
 
@@ -87,6 +109,11 @@ def main() -> int:
     chat_model = os.environ.get("BENCHMARK_CHAT_MODEL", "mistral:latest")
     classifier_mode = os.environ.get("EVIDENCE_CLASSIFIER_MODE", "off")
     classifier_model = os.environ.get("EVIDENCE_CLASSIFIER_MODEL", "")
+    selected_case_ids_raw = os.environ.get("BENCHMARK_CASE_IDS", "").strip()
+    selected_case_ids = {
+        x.strip() for x in selected_case_ids_raw.split(",") if x.strip()
+    } if selected_case_ids_raw else set()
+    fail_fast = (os.environ.get("BENCHMARK_FAIL_FAST", "false").strip().lower() == "true")
 
     run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     out_dir = Path("debug_dump/benchmark_runs") / f"smoke_{run_id}"
@@ -108,6 +135,8 @@ def main() -> int:
             "chat_model": chat_model,
             "classifier_mode": classifier_mode,
             "classifier_model": classifier_model,
+            "selected_case_ids": sorted(selected_case_ids),
+            "fail_fast": fail_fast,
         },
         extra={
             "app": "apps/run_benchmark_smoke.py",
@@ -127,6 +156,8 @@ def main() -> int:
 
     progress_cb = _make_progress_cb(telemetry)
 
+    results_path_live = out_dir / "results.jsonl"
+
     telemetry.event("phase_start", phase="run_benchmark_cases")
     with telemetry.span("run_benchmark_cases", cases_count=len(cases)):
         results = run_benchmark_cases(
@@ -138,7 +169,12 @@ def main() -> int:
             embed_model=embed_model,
             chat_model=chat_model,
             progress_cb=progress_cb,
+            selected_case_ids=selected_case_ids,
+            fail_fast=fail_fast,
         )
+
+        for r in results:
+            _append_jsonl(results_path_live, r.to_dict())
     current_phase += 1
     _print_progress(current_phase, total_phases, "benchmark completato")
     telemetry.event("phase_done", phase="run_benchmark_cases", results_count=len(results))
@@ -195,6 +231,7 @@ def main() -> int:
             "classifier_mode": classifier_mode,
             "classifier_model": classifier_model,
             "cases_count": len(cases),
+            "selected_cases_count": len(results),
             "cases": [c.to_dict() for c in cases],
             "quick_checks": quick_checks,
         }
@@ -205,7 +242,6 @@ def main() -> int:
     telemetry.event("phase_start", phase="write_outputs")
     with telemetry.span("write_outputs"):
         write_json(out_dir / "summary.json", summary)
-        write_jsonl(out_dir / "results.jsonl", [r.to_dict() for r in results])
     current_phase += 1
     _print_progress(current_phase, total_phases, "file scritti")
     telemetry.event(
@@ -231,6 +267,9 @@ def main() -> int:
 
         print(f"\n=== {r.case_id} ===")
         print("label:", r.label)
+        print("status:", getattr(r, "status", "ok"))
+        if getattr(r, "error", ""):
+            print("error:", r.error)
         print("lang:", r.lang)
         print("collection:", r.collection)
         print("citations_count:", len(r.citations or []))
