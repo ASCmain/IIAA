@@ -1,0 +1,16 @@
+{
+  "suite_id": "benchmark_extra_numeric",
+  "description": "Casi extra non canonici ad alta intensità computazionale o sperimentale",
+  "cases": [
+    {
+      "case_id": "p10_ias36_numeric_case_study",
+      "label": "P10 - IAS 36 caso numerico/computazionale",
+      "query": "Agisci come supporto tecnico a un revisore IFRS e CFO. Considera un caso di impairment test IAS 36 su CGU con necessità di confronto tra fair value less costs of disposal e value in use, esplicitando i passaggi logico-tecnici, le assunzioni rilevanti, i punti di giudizio professionale e i raccordi con IFRS 13. Se i dati numerici forniti non sono sufficienti per un calcolo conclusivo, esplicitalo e indica quali ulteriori dati servono.",
+      "lang_mode": "IT",
+      "top_k": 10,
+      "score_threshold": 0.0,
+      "embed_max_chars": 7000,
+      "temperature": 0.0
+    }
+  ]
+}

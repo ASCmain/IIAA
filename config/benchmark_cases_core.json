@@ -1,0 +1,96 @@
+{
+  "suite_id": "benchmark_core_p1_p9",
+  "description": "Suite canonica benchmark P1-P9 per project work IFRS/IAS",
+  "cases": [
+    {
+      "case_id": "p1_ifrs9_business_model_sppi_borderline",
+      "label": "P1 - IFRS 9 business model + SPPI borderline",
+      "query": "Agisci come supporto tecnico a un revisore IFRS. Una società industriale ha acquistato un portafoglio di 20 finanziamenti a medio termine concessi a sviluppatori immobiliari. I contratti prevedono: rimborso del capitale a scadenza; interesse fisso del 4%, ma il pagamento degli interessi è dovuto solo se il progetto immobiliare genera un livello minimo di canoni locativi nel biennio successivo; facoltà della società di vendere parte del portafoglio per esigenze di tesoreria; l’obiettivo dichiarato dal management è “incassare i flussi contrattuali, ma con vendite opportunistiche se utili alla gestione della liquidità”. Voglio che tu analizzi se la classificazione al costo ammortizzato sia tecnicamente difendibile ai sensi di IFRS 9. Rispondi con questa struttura: 1. conclusione sintetica; 2. analisi di business model; 3. analisi del test SPPI; 4. categoria di misurazione più probabile e perché; 5. principali rischi di errore interpretativo; 6. eventuali disclosure o impatti collegati; 7. aspetti da sottoporre a giudizio professionale. Se non sei sicuro, esplicitalo chiaramente.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p2_ifrs9_ecl_forward_looking",
+      "label": "P2 - IFRS 9 ECL forward-looking",
+      "query": "Agisci come supporto tecnico a un revisore IFRS. Una banca regionale detiene crediti verso PMI del settore manifatturiero. Negli ultimi sei mesi si è registrato un peggioramento del contesto macroeconomico, con aumento dei tassi, rallentamento degli ordini e crescita delle insolvenze nel comparto. Alcuni debitori sono ancora puntuali nei pagamenti, ma hanno subito un significativo peggioramento del rating interno. Analizza, ai sensi di IFRS 9, se vi siano indicatori di significativo incremento del rischio di credito e come ciò incida sul passaggio da Stage 1 a Stage 2. Rispondi con questa struttura: 1. conclusione sintetica; 2. criteri di valutazione del SICR; 3. ruolo delle informazioni forward-looking; 4. distinzione tra Stage 1, Stage 2 e Stage 3; 5. principali giudizi professionali richiesti; 6. rischi di errore interpretativo; 7. eventuali disclosure rilevanti.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p3_ifrs9_hedge_accounting",
+      "label": "P3 - IFRS 9 hedge accounting",
+      "query": "Agisci come supporto tecnico a un revisore IFRS. Una società industriale utilizza derivati su tasso per coprire il rischio di variabilità dei flussi finanziari di un finanziamento a tasso variabile. Analizza, ai sensi di IFRS 9, quali condizioni devono essere soddisfatte affinché la relazione di copertura possa qualificarsi come hedge accounting. Rispondi con questa struttura: 1. conclusione sintetica; 2. requisiti formali della relazione di copertura; 3. valutazione della relazione economica; 4. effetto del rischio di credito; 5. trattamento dell’hedge ineffectiveness; 6. principali rischi applicativi; 7. disclosure o impatti collegati.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p4_ifrs7_liquidity_risk_disclosure",
+      "label": "P4 - IFRS 7 liquidity risk disclosure",
+      "query": "Agisci come supporto tecnico a un revisore IFRS. Una società quotata presenta debiti finanziari con scadenze molto concentrate nei successivi dodici mesi e linee committed ancora disponibili. Analizza quali informazioni, ai sensi di IFRS 7, devono essere fornite per rappresentare correttamente il rischio di liquidità. Rispondi con questa struttura: 1. conclusione sintetica; 2. disclosure qualitative richieste; 3. disclosure quantitative richieste; 4. maturity analysis; 5. principali rischi di incompletezza informativa; 6. aspetti da sottoporre a giudizio professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p5_ifrs7_market_risk_sensitivity",
+      "label": "P5 - IFRS 7 market risk sensitivity",
+      "query": "Agisci come supporto tecnico a un revisore IFRS. Una società con esposizione a tasso e cambio presenta strumenti finanziari sensibili a variazioni ragionevolmente possibili dei fattori di rischio. Analizza quali disclosure di sensitivity analysis sono richieste da IFRS 7, con particolare attenzione a tasso di interesse e rischio di cambio. Rispondi con questa struttura: 1. conclusione sintetica; 2. perimetro del market risk; 3. contenuto minimo della sensitivity analysis; 4. collegamento con metodi e ipotesi usate dal management; 5. principali rischi di errore o opacità informativa; 6. aspetti di giudizio professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p6_ifrs1_first_time_financial_instruments",
+      "label": "P6 - IFRS 1 first-time adoption strumenti finanziari",
+      "query": "Agisci come supporto tecnico a un revisore IFRS. Una società adotta gli IFRS per la prima volta e deve classificare e valutare attività finanziarie precedentemente trattate secondo principi contabili nazionali. Analizza il ruolo di IFRS 1 rispetto all’applicazione iniziale di IFRS 9 e IFRS 7, evidenziando esenzioni, limiti e aree di giudizio. Rispondi con questa struttura: 1. conclusione sintetica; 2. ruolo di IFRS 1; 3. raccordo con IFRS 9; 4. raccordo con IFRS 7; 5. principali rischi applicativi; 6. aspetti da sottoporre a giudizio professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p7_ias36_recoverable_amount_ifrs13",
+      "label": "P7 - IAS 36 recoverable amount + IFRS 13",
+      "query": "Agisci come supporto tecnico a un revisore IFRS. Una CGU presenta indicatori di impairment e l’entità sta valutando il recoverable amount considerando sia value in use sia fair value less costs of disposal. Analizza, ai sensi di IAS 36 e con i raccordi rilevanti a IFRS 13, come si determina il recoverable amount e quali sono i principali profili di giudizio. Rispondi con questa struttura: 1. conclusione sintetica; 2. definizione di recoverable amount; 3. value in use; 4. fair value less costs of disposal; 5. principali rischi di errore; 6. disclosure/impatti collegati; 7. aspetti da sottoporre a giudizio professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p8_ias36_goodwill_key_assumptions",
+      "label": "P8 - IAS 36 goodwill e key assumptions",
+      "query": "Agisci come supporto tecnico a un revisore IFRS. Una società ha allocato goodwill a una CGU significativa e deve svolgere il test di impairment annuale. Analizza, ai sensi di IAS 36, il ruolo delle key assumptions, della sensitività e dei profili informativi da fornire. Rispondi con questa struttura: 1. conclusione sintetica; 2. ruolo del goodwill nel test; 3. key assumptions; 4. sensitivity analysis; 5. disclosure richieste; 6. principali rischi di errore interpretativo; 7. aspetti da sottoporre a giudizio professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p9_ifrs1_fair_value_deemed_cost_impairment",
+      "label": "P9 - IFRS 1 fair value as deemed cost + impairment",
+      "query": "Agisci come supporto tecnico a un revisore IFRS. Una società first-time adopter ha utilizzato il fair value come deemed cost per alcune attività e successivamente deve valutarne l’eventuale impairment. Analizza il raccordo tra IFRS 1, IAS 36 e, se rilevante, IFRS 13. Rispondi con questa struttura: 1. conclusione sintetica; 2. ruolo del deemed cost in IFRS 1; 3. raccordo con IAS 36; 4. eventuale ruolo di IFRS 13; 5. principali rischi di errore interpretativo; 6. aspetti da sottoporre a giudizio professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    }
+  ]
+}
