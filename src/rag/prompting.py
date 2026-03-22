@@ -44,13 +44,22 @@ def build_grounded_prompt(
     core_evidences: List[Evidence],
     context_evidences: List[Evidence],
     answer_language: str,
+    focus_summary: str = "",
 ) -> str:
     lang_note = "Italiano" if answer_language.upper() == "IT" else "English"
     core_cites = "\n\n".join(format_evidence(e, i + 1) for i, e in enumerate(core_evidences))
     context_cites = "\n\n".join(format_evidence(e, i + 1) for i, e in enumerate(context_evidences))
 
+    focus_block = ""
+    if str(focus_summary or "").strip():
+        focus_block = (
+            f"\nDetected domain focus: {focus_summary}\n"
+            "Use this focus conservatively: privilege evidence aligned with the detected standards/topics "
+            "and avoid grounding the answer on lateral standards unless strictly necessary.\n"
+        )
+
     return f"""
-You are an IAS/IFRS assistant. Answer in {lang_note}.
+You are an IAS/IFRS assistant. Answer in {lang_note}.{focus_block}
 
 Rules:
 - Use ONLY the provided evidence texts. If evidence is insufficient, say what is missing and stop.
@@ -60,7 +69,8 @@ Rules:
 - Do NOT invent citations.
 - If you use multiple evidences, cite each relevant statement with the appropriate label.
 - Treat CORE evidences as primary authority.
-- Use CONTEXT evidences only to clarify, distinguish concepts, or complete the answer without overriding CORE evidences.
+- If CORE evidences aligned with the primary standard/topic are available, do NOT base the answer on CONTEXT evidences.
+- Use CONTEXT evidences only to clarify, distinguish concepts, or add limited cross-reference without overriding CORE evidences.
 
 User question:
 {query}

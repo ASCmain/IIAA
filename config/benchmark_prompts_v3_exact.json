@@ -1,0 +1,118 @@
+{
+  "suite_id": "benchmark_prompts_v2_exact_generalist_comparison",
+  "description": "Suite esatta dei 10 prompt del file 'Prompts v2.txt' usati per il confronto con chatbot generalisti. Testi dei prompt non modificati.",
+  "source_file": "Prompts v2.txt",
+  "cases_count": 10,
+  "cases": [
+    {
+      "case_id": "p1_ifrs9_business_model_sppi_borderline_exact",
+      "label": "P1 - IFRS 9 business model + SPPI borderline",
+      "prompt_source_title": "Prompt (IFRS 9)",
+      "query": "Agisci come supporto tecnico a un revisore IFRS.\nUna società industriale ha acquistato un portafoglio di 20 finanziamenti a medio termine concessi a sviluppatori immobiliari. I contratti prevedono:\n- rimborso del capitale a scadenza;\n- interesse fisso del 4%, ma il pagamento degli interessi è dovuto solo se il progetto immobiliare genera un livello minimo di canoni locativi nel biennio successivo;\n- facoltà della società di vendere parte del portafoglio per esigenze di tesoreria;\n- l’obiettivo dichiarato dal management è “incassare i flussi contrattuali, ma con vendite opportunistiche se utili alla gestione della liquidità”.\nVoglio che tu analizzi se la classificazione al costo ammortizzato sia tecnicamente difendibile ai sensi di IFRS 9.\nRispondi con questa struttura:\n1. conclusione sintetica;\n2. analisi di business model;\n3. analisi del test SPPI;\n4. categoria di misurazione più probabile e perché;\n5. principali rischi di errore interpretativo;\n6. eventuali disclosure o impatti collegati;\n7. aspetti da sottoporre a giudizio professionale.\nSe non sei sicuro, esplicitalo chiaramente. \nStruttura la risposta senza elementi grafici e punti elenco, se non strettamente funzionali alla risposta, in maniera discorsiva e con un taglio altamente professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p2_ifrs9_ecl_forward_looking_exact",
+      "label": "P2 - IFRS 9 ECL forward-looking",
+      "prompt_source_title": "Prompt 2 (IFRS 9)",
+      "query": "Agisci come consulente tecnico IFRS per il CFO di una banca di medie dimensioni. Al 31 dicembre 20X5 la banca ha un portafoglio di mutui corporate performing. Nel corso dell’anno alcuni debitori hanno subito downgrade interni; nessuno è ancora in default; per un settore specifico il management ha aggiornato lo scenario macroeconomico con peggioramento atteso dei flussi di cassa nei prossimi 18 mesi; il portafoglio presenta anche garanzie reali rilevanti. Spiega come dovrebbe essere impostata, a livello concettuale, la valutazione della loss allowance ai sensi di IFRS 9, distinguendo 12-month ECL vs lifetime ECL, SICR, uso di informazioni forward-looking, ruolo delle garanzie, valutazione individuale vs collettiva, errori tipici da evitare e disclosure IFRS 7 sensibili. Chiudi indicando cosa il revisore chiederebbe al management.\nStruttura la risposta senza elementi grafici e punti elenco, se non strettamente funzionali alla risposta, in maniera discorsiva e con un taglio altamente professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p3_ifrs9_hedge_accounting_exact",
+      "label": "P3 - IFRS 9 hedge accounting",
+      "prompt_source_title": "Prompt 3 (IFRS 9)",
+      "query": "Agisci come technical accounting advisor. Una società manifatturiera ha debito a tasso variabile e ha stipulato interest rate swaps per ridurre la volatilità dei flussi finanziari. Il CFO vuole sapere se, in base a IFRS 9, la società può adottare hedge accounting in modo più coerente con la propria risk management policy rispetto al vecchio IAS 39. Prepara una risposta destinata a CFO e revisore, spiegando il razionale di hedge accounting in IFRS 9, perché è considerato più allineato al risk management, quali condizioni tecniche restano essenziali, cosa non si può dare per scontato, quali evidenze documentali e controlli il revisore chiederebbe e quali disclosure possono diventare rilevanti.\nStruttura la risposta senza elementi grafici e punti elenco, se non strettamente funzionali alla risposta, in maniera discorsiva e con un taglio altamente professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p4_ifrs7_liquidity_risk_disclosure_exact",
+      "label": "P4 - IFRS 7 liquidity risk disclosure",
+      "prompt_source_title": "Prompt 4 (IFRS 7)",
+      "query": "Agisci come revisore IFRS che deve valutare la bozza di nota integrativa di una società quotata. La società presenta debiti bancari a breve, linee committed e non committed, covenant stringenti e tensioni di cassa nel primo trimestre successivo alla chiusura. Il management ha predisposto una disclosure IFRS 7 molto sintetica sul liquidity risk, limitandosi a dire che “la liquidità è monitorata regolarmente”. Spiega quali elementi renderebbero la disclosure più difendibile ai sensi di IFRS 7, distinguendo criticità della disclosure attuale, disclosure qualitative e quantitative attese, contenuti della maturity analysis, ruolo di judgement e materialità, warning per il revisore e collegamenti con going concern o altre note. Struttura la risposta senza elementi grafici e punti elenco, se non strettamente funzionali alla risposta, in maniera discorsiva e con un taglio altamente professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p5_ifrs7_market_risk_sensitivity_exact",
+      "label": "P5 - IFRS 7 market risk sensitivity",
+      "prompt_source_title": "Prompt 5 (IFRS 7)",
+      "query": "Agisci come specialista IFRS disclosure.\nUna holding industriale ha esposizioni rilevanti a:\n- tasso di interesse;\n- cambio USD/EUR;\n- partecipazioni quotate classificate a fair value.\nIl CFO ti chiede come impostare correttamente la sensitivity analysis IFRS 7 per il market risk, evitando una disclosure meramente formale.\nSpiega:\n1. quali rischi richiedono normalmente sensitivity analysis;\n2. come distinguere una sensitivity analysis “minima” da una disclosure davvero utile;\n3. quando può essere usato un approccio alternativo basato su VaR o metodologia interna;\n4. quali sono le principali assunzioni da esplicitare;\n5. quali errori rendono la disclosure poco difendibile;\n6. come valuteresti la qualità della disclosure dal punto di vista di un revisore.\nStruttura la risposta senza elementi grafici e punti elenco, se non strettamente funzionali alla risposta, in maniera discorsiva e con un taglio altamente professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p6_ifrs7_ifrs1_first_time_disclosures_exact",
+      "label": "P6 - IFRS 7 / IFRS 1 first-time adoption disclosures",
+      "prompt_source_title": "Prompt 6 (IFRS 7 e 1)",
+      "query": "Agisci come advisor IFRS per una società che adotta gli IFRS per la prima volta. Nel primo bilancio IFRS, il CFO chiede se tutte le comparative disclosures su strumenti finanziari richieste da IFRS 7 debbano necessariamente essere presentate con lo stesso livello di dettaglio del periodo corrente, oppure se esistano semplificazioni o transitional relief collegati a IFRS 1. Fornisci una risposta professionale che distingua principio generale di IFRS 1 sulla prima adozione, eventuale rilievo delle relief o disclosure exemptions, rischi di una risposta troppo semplificata, verifiche pratiche necessarie e impatti per CFO, revisore e governance del processo di first-time adoption.\nStruttura la risposta senza elementi grafici e punti elenco, se non strettamente funzionali alla risposta, in maniera discorsiva e con un taglio altamente professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p7_ias36_ifrs13_recoverable_amount_exact",
+      "label": "P7 - IAS 36 / IFRS 13 recoverable amount",
+      "prompt_source_title": "Prompt 7 (IAS 36 e IFRS 13)",
+      "query": "Agisci come supporto tecnico a un CFO. Spiega in modo professionale, ma non accademico, come deve essere determinato il recoverable amount di un asset o di una CGU ai sensi di IAS 36, chiarendo il rapporto tra value in use, fair value less costs of disposal e fair value ai sensi di IFRS 13. La risposta deve definire correttamente il recoverable amount, chiarire quando non è necessario stimare entrambe le grandezze, distinguere fair value da valore interno o entity-specific, evidenziare gli errori concettuali più comuni e spiegare perché il tema è delicato per revisori e CFO.\nStruttura la risposta senza elementi grafici e punti elenco, se non strettamente funzionali alla risposta, in maniera discorsiva e con un taglio altamente professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p8_ias36_goodwill_key_assumptions_exact",
+      "label": "P8 - IAS 36 goodwill key assumptions",
+      "prompt_source_title": "Prompt 8 (IAS 36)",
+      "query": "Agisci come technical reviewer per un impairment test IAS 36. Una società ha allocato goodwill a una CGU significativa. Il management stima il recoverable amount usando il value in use. Le previsioni includono crescita dei ricavi per 5 anni, miglioramento dei margini, tasso di sconto aggiornato e ipotesi che riflettono anche rischi climatici e di transizione. Prepara una risposta per revisore e CFO che spieghi quali sono i passaggi essenziali per giudicare la robustezza del test, il ruolo delle key assumptions, come valutare ragionevolezza, supportabilità e coerenza con evidenze esterne, quali disclosure IAS 36 sono più sensibili, quali red flags aumentano lo scetticismo professionale e perché una risposta apparentemente ben scritta può essere comunque tecnicamente insufficiente.\nStruttura la risposta senza elementi grafici e punti elenco, se non strettamente funzionali alla risposta, in maniera discorsiva e con un taglio altamente professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p9_ias36_first_time_adoption",
+      "label": "P9 - IAS 36 first time adoption",
+      "prompt_source_title": "Prompt 9 (IAS 36 + IFRS 1 + IFRS 13)",
+      "query": "Agisci come advisor per una first-time adoption IFRS. Una società che redigeva il bilancio secondo previous GAAP decide di adottare gli IFRS. Per alcuni immobili strumentali e alcuni asset operativi ha valutato la possibilità di usare il fair value come deemed cost in sede di transizione. Il CFO chiede se questa scelta “protegga” di fatto l’azienda da futuri problemi di impairment nel breve periodo. Rispondi in modo tecnico e prudente, distinguendo cosa consente IFRS 1 in tema di deemed cost, il significato di fair value alla luce di IFRS 13, perché la scelta iniziale di deemed cost non elimina il tema IAS 36 negli esercizi successivi, quali misunderstanding sono frequenti nel management e quali verifiche dovrebbe chiedere un revisore.\nStruttura la risposta senza elementi grafici e punti elenco, se non strettamente funzionali alla risposta, in maniera discorsiva e con un taglio altamente professionale.",
+      "lang_mode": "IT",
+      "top_k": 8,
+      "score_threshold": 0.0,
+      "embed_max_chars": 6000,
+      "temperature": 0.0
+    },
+    {
+      "case_id": "p10_ias36_numeric_case_study_exact",
+      "label": "P10 - IAS 36 caso numerico/computazionale",
+      "prompt_source_title": "Prompt 10 (IAS 36, IFRS 13)",
+      "query": "Case Studies IAS 36 - IMPAIRMENT OF ASSETS\n\nCase study 01 - Calcolo del valore in uso e riconoscimento di una perdita di valore (non vengono considerati gli effetti fiscali)\n\nAlla fine dell’anno 20X0, l’impresa T acquista l’impresa M ad un prezzo di 10.000. La società acquisita dispone di impianti in tre Paesi differenti.\n\nScheda 1. Alla data di acquisizione, l’allocazione del prezzo di acquisto viene ripartito secondo questa modalità.\n\n\n(0)     (1)Allocazione del prezzo   (2) Fair value delle attività identificabili    (3) Goodwill\n\nAttività nel Paese A\t3000\t\t2000\t\t1000\nAttività nel Paese B\t2000\t\t1500\t\t500\nAttività nel Paese C\t5000\t\t3500\t\t1500\n\nTotali\t    10000\t\t7000\t\t3000\n\nLe attività di ciascun Paese costituiscono C.G.U., e il goodwill che emerge dalla ripartizione del prezzo di acquisto è associabile alle C.G.U.\n\nPoiché il goodwill è stato allocato alle tre C.G.U., queste devono essere assoggettate a test annuale di impairment, da effettuarsi anche più frequentemente se dovessero emergere indicatori di perdite di valore.\n\nIl prezzo netto di vendita di ciascuna C.G.U. non è determinabile perché è improbabile che esista un acquirente disposto a rilevare tutte e tre le C.G.U.; perciò, il valore recuperabile di ciascuna C.G.U. dovrà essere effettuato con riferimento al suo valore in uso. Alla fine del 20X0 e 20X1, il valore in uso eccede il valore contabile; perciò le attività attribuite alle C.G.U. e i relativi goodwill non sono stati rettificati.\n\nAll’inizio dell’anno 20X2, nel Paese A viene eletto un nuovo governo che, modificando le linee di politica economica, inciderà negativamente sui livelli produttivi dell’attività svolta dall’impresa M nel Paese A; le stime predisposte dal management della capogruppo T, indicano un taglio della produzione di circa 40% rispetto ai livelli raggiunti           sino ad ora.\n\nLa conseguenza di tutto ciò è una inevitabile perdita di valore degli impianti della società operante nel Paese A, ma anche del relativo avviamento iscritto.\nL’ammortamento degli impianti, facenti capo alla C.G.U. operante nel Paese A, è effettuato sulla base di una vita utile di 12 anni (considerando “zero” il valore finale).\n  Per determinare il valore in uso della C.G.U. relativa al Paese A, l’impresa T predispone:\na)un cash flows forecasts, derivato da recenti pianti e budget approvati dal management e destinati a coprire un periodo di tempo non superiore ai 5 anni (si considerano i cash flows per i periodi 20X2 – 20X6);\nb)stimare i cash flows per i periodi successivi (dal 20X7 al 20X12), applicando a quelli disponibili un tasso di sviluppo progressivamente inferiore a quello utilizzato per il primo quinquennio; l’impresa stima nel 3% il tasso da applicare nel 20x7, -2% nel 20x8. -6% 20x9, -15% nel 20x10, -25% 20x11, - 67% 20x12. Si riporta di seguito la tabella dei flussi di cassa attesi per i primi 5 anni ed i tassi di crescita e decrescita per i successivi anni:\n\nAnno\tTasso dicrescita\tCash flowsattesi\n\n20X2\t\t                230\n20X3\t\t                253\n20X4\t\t                273\n20X5\t\t                290\n20X6\t\t                304\n20X7\t3%\n20X8\t-2%\n20X9\t-6%\n20X10\t-15%\n20X11\t-25%\n20X12\t-67%\n\nc)fissare al 15% il tasso di attualizzazione dei flussi finanziari attesi, che riflette sia le condizioni correnti del mercato, sia il rischio specifico dell’investimento considerato.\n\nSi verifichi la presenza di una perdita di valore nell’anno 20x2 e si effettuino le relative scritture contabili.",
+      "lang_mode": "IT",
+      "top_k": 10,
+      "score_threshold": 0.0,
+      "embed_max_chars": 7000,
+      "temperature": 0.0
+    }
+  ]
+}

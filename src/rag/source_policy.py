@@ -62,6 +62,24 @@ def filter_evidences_for_plan(plan: QueryPlan, evidences, requested_top_k: int):
     return out[:keep_n]
 
 
+
+def _apply_focus_penalty_from_targets(plan: QueryPlan, hay: str, score: float) -> float:
+    targets = [str(x or "").upper() for x in (plan.target_standards or []) if str(x or "").strip()]
+    if not targets:
+        return score
+
+    has_target = any(tg in hay for tg in targets)
+    mentions_standard = any(x in hay for x in ["IAS ", "IFRS ", "IFRIC ", "SIC "])
+
+    if not has_target and mentions_standard:
+        if plan.question_type in {"rule_interpretation", "numeric_calculation", "mixed_numeric_interpretive"}:
+            score -= 0.16
+        elif plan.question_type in {"transition_disclosure", "change_analysis"}:
+            score -= 0.10
+
+    return score
+
+
 def rerank_evidences_for_plan(plan: QueryPlan, evidences):
     target_upper = {x.upper() for x in (plan.target_standards or [])}
 
@@ -141,9 +159,51 @@ def rerank_evidences_for_plan(plan: QueryPlan, evidences):
             if any(x in hay for x in ["IAS ", "IFRS ", "IFRIC ", "SIC "]):
                 score -= 0.08
 
+        score = _apply_focus_penalty_from_targets(plan, hay, score)
         return score
 
     return sorted(evidences, key=score_evidence, reverse=True)
+
+
+
+def gate_primary_standard_candidates(
+    plan: QueryPlan,
+    evidences,
+    focus_output: dict | None = None,
+):
+    """
+    Stronger candidate gating before core/context split.
+    If a primary target standard exists, prefer candidates aligned to it.
+    Keep a small tail of non-aligned items to avoid pathological over-pruning.
+    """
+    if not evidences:
+        return list(evidences or [])
+
+    primary = [str(x or "").upper() for x in (plan.target_standards or []) if str(x or "").strip()]
+    focus_primary = [str(x or "").upper() for x in ((focus_output or {}).get("primary_standards") or []) if str(x or "").strip()]
+
+    anchors = focus_primary or primary
+    if not anchors:
+        return list(evidences)
+
+    def _aligned(e) -> bool:
+        hay = _evidence_haystack(e)
+        return any(a in hay for a in anchors)
+
+    aligned = [e for e in evidences if _aligned(e)]
+    non_aligned = [e for e in evidences if not _aligned(e)]
+
+    # If there are enough aligned items, heavily prefer them.
+    if len(aligned) >= 4:
+        tail = non_aligned[:2]
+        return aligned + tail
+
+    # If aligned items are present but few, still front-load them.
+    if aligned:
+        tail = non_aligned[: max(2, len(evidences) - len(aligned))]
+        return aligned + tail
+
+    return list(evidences)
 
 
 def split_core_and_context_for_plan(plan: QueryPlan, evidences):
@@ -378,6 +438,61 @@ def prune_evidences_for_plan(plan: QueryPlan, evidences):
         out.append(e)
 
     return out
+
+
+
+def apply_focus_enforcement(
+    focus_output: dict,
+    core_evidences,
+    context_evidences,
+    question_type: str = "",
+):
+    """
+    Conservative but stronger focus enforcement:
+    - if a primary standard is detected, non-aligned core evidences are demoted;
+    - promote aligned context evidences into core when core is weak or polluted;
+    - keep lateral material in context.
+    """
+    primary = [str(x or "").upper() for x in (focus_output or {}).get("primary_standards") or [] if str(x or "").strip()]
+    if not primary:
+        return list(core_evidences), list(context_evidences)
+
+    def _hay(e):
+        return _evidence_haystack(e)
+
+    def _aligned(e):
+        hay = _hay(e)
+        return any(std in hay for std in primary)
+
+    orig_core = list(core_evidences or [])
+    orig_context = list(context_evidences or [])
+
+    aligned_core = [e for e in orig_core if _aligned(e)]
+    demoted_core = [e for e in orig_core if not _aligned(e)]
+    aligned_context = [e for e in orig_context if _aligned(e)]
+    other_context = [e for e in orig_context if not _aligned(e)]
+
+    # If there is at least one aligned core, keep only aligned core as core.
+    # If there are no aligned core items, promote aligned context items.
+    new_core = list(aligned_core)
+    if not new_core and aligned_context:
+        new_core = list(aligned_context[: max(1, len(orig_core) or 1)])
+        aligned_context = aligned_context[len(new_core):]
+
+    # If still empty, fall back to original core to avoid pathological empty core.
+    if not new_core:
+        return orig_core, orig_context
+
+    new_context = []
+    seen_ctx = set()
+    for bucket in (demoted_core, aligned_context, other_context):
+        for e in bucket:
+            pid = str(getattr(e, "point_id", None) or "")
+            if pid and pid not in seen_ctx and pid not in {str(getattr(c, "point_id", None) or "") for c in new_core}:
+                new_context.append(e)
+                seen_ctx.add(pid)
+
+    return new_core, new_context
 
 
 def effective_threshold_for_plan(plan: QueryPlan) -> float:

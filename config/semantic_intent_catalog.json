@@ -1,0 +1,101 @@
+{
+  "catalog_version": "v0.1.0",
+  "items": [
+    {
+      "intent_id": "change_analysis",
+      "label": "Regulatory change analysis",
+      "question_type_hint": "change_analysis",
+      "description": "Query su modifiche normative, atti UE, amendment, aggiornamenti di standard, confronto tra versione precedente e versione modificata.",
+      "positive_examples": [
+        "Quali modifiche introduce il regolamento UE 2025/1266?",
+        "Quali cambiamenti sono stati apportati a IFRS 9 e IFRS 7?",
+        "Analizza le modifiche regolamentari rilevanti"
+      ],
+      "negative_examples": [
+        "Spiega il valore recuperabile IAS 36",
+        "Quali disclosure richiede IFRS 7 sul market risk?"
+      ],
+      "keywords": ["regolamento ue", "modifica", "amendment", "update", "effective change"]
+    },
+    {
+      "intent_id": "transition_regulatory",
+      "label": "Transition or first-time adoption regulatory context",
+      "question_type_hint": "transition_disclosure",
+      "description": "Query su prima applicazione, data di entrata in vigore, first-time adoption, transition requirements, effective date, initial application.",
+      "positive_examples": [
+        "Quali regole di transizione si applicano alla prima adozione IFRS?",
+        "Qual è la data di entrata in vigore e la disciplina di prima applicazione?",
+        "Analizza le transition requirements di IFRS 1"
+      ],
+      "negative_examples": [
+        "Rischi climatici e di transizione nelle assunzioni IAS 36",
+        "Sensitivity analysis IFRS 7"
+      ],
+      "keywords": ["prima adozione", "first-time", "first application", "effective date", "initial application", "transition requirements"]
+    },
+    {
+      "intent_id": "disclosure_check",
+      "label": "Disclosure and informative requirements",
+      "question_type_hint": "disclosure_check",
+      "description": "Query su disclosure, informative di bilancio, sensitivity analysis, maturity analysis, risk disclosure, key assumptions disclosure.",
+      "positive_examples": [
+        "Quali disclosure richiede IFRS 7 sul rischio di mercato?",
+        "Quali informazioni vanno fornite sul rischio di liquidità?",
+        "Quali key assumptions devono essere disclosed nello IAS 36?"
+      ],
+      "negative_examples": [
+        "Calcola il value in use",
+        "Quali modifiche introduce il regolamento UE?"
+      ],
+      "keywords": ["disclosure", "informativa", "sensitivity analysis", "maturity analysis", "market risk", "liquidity risk", "key assumptions"]
+    },
+    {
+      "intent_id": "numeric_measurement",
+      "label": "Numeric or measurement-heavy reasoning",
+      "question_type_hint": "numeric_calculation",
+      "description": "Query su misurazione tecnica o computazionale: value in use, fair value less costs of disposal, DCF, WACC, attualizzazione, discounted cash flow.",
+      "positive_examples": [
+        "Calcola il value in use della CGU",
+        "Come determinare il fair value less costs of disposal?",
+        "Analizza un caso numerico di impairment IAS 36"
+      ],
+      "negative_examples": [
+        "Quali disclosure richiede IFRS 7?",
+        "Quali modifiche introduce un regolamento UE?"
+      ],
+      "keywords": ["calcola", "numeric", "value in use", "fair value less costs of disposal", "wacc", "dcf", "attualizzazione", "discount rate"]
+    },
+    {
+      "intent_id": "rule_interpretation",
+      "label": "Rule interpretation",
+      "question_type_hint": "rule_interpretation",
+      "description": "Query interpretative su principi, definizioni, applicazione delle regole, raccordi tra standard, giudizio professionale.",
+      "positive_examples": [
+        "Spiega il concetto di valore recuperabile nello IAS 36",
+        "Quando un'attività supera il test SPPI?",
+        "Qual è il ruolo del goodwill nell'impairment test?"
+      ],
+      "negative_examples": [
+        "Calcola il WACC",
+        "Qual è la data di prima applicazione del regolamento?"
+      ],
+      "keywords": ["spiega", "analizza", "interpreta", "giudizio professionale", "definizione", "raccordo"]
+    },
+    {
+      "intent_id": "climate_transition_business_context",
+      "label": "Business or climate transition context",
+      "question_type_hint": "rule_interpretation",
+      "description": "Uso non regolamentare della parola transizione: rischi climatici e di transizione, contesto industriale o gestionale, non transition requirements IFRS.",
+      "positive_examples": [
+        "Ipotesi che riflettono rischi climatici e di transizione",
+        "Transizione energetica e impatti sulle assunzioni del management",
+        "Rischi di transizione nel business model"
+      ],
+      "negative_examples": [
+        "Transition requirements IFRS 1",
+        "Initial application of IFRS"
+      ],
+      "keywords": ["rischi climatici", "rischi di transizione", "transizione energetica", "climate transition", "business transition"]
+    }
+  ]
+}

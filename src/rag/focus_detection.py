@@ -179,3 +179,28 @@ def detect_focus_with_llm(
     normalized["raw_response"] = raw
     normalized["model"] = classifier_model
     return normalized
+
+def summarize_focus(data: dict[str, Any]) -> str:
+    data = data or {}
+    primary = data.get("primary_standards") or []
+    secondary = data.get("secondary_standards") or []
+    topics = data.get("topic_axes") or []
+    intents = data.get("intent_axes") or []
+    confidence = data.get("confidence") or "low"
+    ambiguity = data.get("ambiguity_flags") or []
+
+    parts = []
+    if primary:
+        parts.append("Primary standards: " + ", ".join(primary))
+    if secondary:
+        parts.append("Secondary standards: " + ", ".join(secondary))
+    if topics:
+        parts.append("Topic axes: " + ", ".join(topics))
+    if intents:
+        parts.append("Intent axes: " + ", ".join(intents))
+    parts.append("Confidence: " + str(confidence))
+    if ambiguity:
+        parts.append("Ambiguity flags: " + ", ".join(str(x) for x in ambiguity))
+
+    return " | ".join(parts)
+

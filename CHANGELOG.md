@@ -96,3 +96,9 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 - completamento del benchmark finale su 10 prompt senza errori runtime;
 - allineamento della documentazione architetturale su query compaction, subset benchmark execution ed export dei risultati.
 
+
+### Added
+- consolidamento del semantic router locale con catalogo intenti versionato;
+- allineamento definitivo della suite benchmark `benchmark_prompts_v3_exact.json`;
+- rifiniture finali di query planning, source policy, prompting e focus detection per il benchmark conclusivo.
+
