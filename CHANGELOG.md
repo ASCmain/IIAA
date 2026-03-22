@@ -58,3 +58,41 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 - supporto a esecuzione selettiva dei casi con `BENCHMARK_CASE_IDS`;
 - supporto a `BENCHMARK_FAIL_FAST` per decidere se interrompere o proseguire dopo errori per-case.
 
+
+### Added
+- propagazione dei segnali di focus nei risultati benchmark;
+- correzione del tracker `used_citations` per escludere il blocco finale di riepilogo citazioni.
+
+
+### Added
+- focus enforcement conservativo sul bucket `core/context`;
+- serializzazione di `max_core`, `max_context` e `policy_trace` nel benchmark;
+- miglioramento del tracker `used_citations` per varianti del blocco finale citazioni.
+
+
+### Added
+- semantic router locale embedding-based per il query planning;
+- catalogo versionato degli intent semantici in `config/semantic_intent_catalog.json`.
+
+
+### Added
+- rafforzamento del primary-standard core enforcement;
+- esposizione di `core_cite_keys` e `context_cite_keys` nel benchmark.
+
+
+### Added
+- primary-standard candidate gating prima dello split `core/context`.
+
+
+### Added
+- esportazione documentabile dei metadati della query embedding-based nel benchmark finale IIAA;
+- generazione dell'appendice tecnica dei risultati benchmark IIAA;
+- completamento del benchmark finale su 10 prompt senza errori runtime.
+
+
+### Added
+- esportazione documentabile dei metadati della query embedding-based nel benchmark finale IIAA;
+- generazione dell'appendice tecnica dei risultati benchmark IIAA;
+- completamento del benchmark finale su 10 prompt senza errori runtime;
+- allineamento della documentazione architetturale su query compaction, subset benchmark execution ed export dei risultati.
+

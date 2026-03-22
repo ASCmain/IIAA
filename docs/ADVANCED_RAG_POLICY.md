@@ -408,6 +408,10 @@ Per ciascun case vengono tracciati almeno:
 - `context_evidences_count`
 - `classifier_items_count`
 - `case_total_ms`
+- `query_len_original`
+- `query_len_embedded`
+- `query_was_truncated`
+- `retrieval_query_strategy`
 
 ### 17.2 Telemetria di run
 Il benchmark smoke produce:
@@ -419,3 +423,24 @@ Questa osservabilità rende il benchmark utile anche come base empirica per:
 - confronti tra configurazioni del classifier;
 - analisi del costo computazionale locale;
 - discussione metodologica in appendice tecnica.
+
+## 18. Query compaction per prompt lunghi
+
+Per prompt estesi, in particolare case study numerici o tracce esercitative, il sistema non usa necessariamente l'intera query testuale nei moduli embedding-based.  
+Viene invece costruita una embedding query compattata, finalizzata a:
+- rientrare nei limiti tecnici dell'endpoint embeddings;
+- mantenere il focus sugli standard target;
+- preservare i segnali semantici rilevanti per routing e retrieval.
+
+La query completa resta comunque disponibile per la fase di prompting finale e per la generazione della risposta.
+
+### 18.1 Implicazione benchmark
+Nel benchmark finale, la query compattata usata dai moduli embedding-based viene esposta come metadato tecnico. Questo consente di distinguere i limiti infrastrutturali da quelli metodologici del sistema.
+
+### 18.2 Limite residuo sui casi numerici
+La query compaction risolve il problema tecnico dei prompt troppo lunghi per l'endpoint embeddings, ma non equivale di per sé a una piena capacità di risoluzione numerico-contabile del caso. Nei case study numerici, il sistema può quindi risultare:
+- corretto nel grounding normativo;
+- ancora incompleto nell'esecuzione del calcolo end-to-end.
+
+### 18.3 Uso del benchmark su subset selezionati
+Per finalità di regression, diagnosi e isolamento dei failure mode, il benchmark può essere eseguito anche su sottoinsiemi selezionati di casi, senza compromettere la comparabilità metodologica della suite complessiva.

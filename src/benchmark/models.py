@@ -38,6 +38,23 @@ class BenchmarkRunResult:
     threshold_initial: float | None
     threshold_effective: float | None
     coverage_warning_low_candidate_count: bool
+    max_core: int
+    max_context: int
+    policy_trace: Dict[str, Any]
+    core_cite_keys: List[str]
+    context_cite_keys: List[str]
+    semantic_route: Dict[str, Any]
+    focus_detection_mode: str
+    focus_detection_model: str
+    focus_catalog_version: str
+    focus_detection_result: Dict[str, Any]
+    focus_summary: str
+    query_len_original: int | None
+    query_len_embedded: int | None
+    query_was_truncated: bool | None
+    retrieval_query_strategy: str
+    embedding_query_preview: str
+    retrieval_query_preview: str
     classifier_mode: str
     classifier_model: str
     classifier_items: List[Dict[str, Any]]

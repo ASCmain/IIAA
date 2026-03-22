@@ -133,9 +133,6 @@ Il coordinamento in `src/rag/orchestrator.py` include inoltre:
 - selezione di un `analysis_pool` guidato da `analysis_pool_target`, `min_candidate_floor` e `threshold_fallback_ladder`;
 - pruning successivo prima dello split `core/context`;
 - telemetry timing per fasi (`embed`, `retrieve`, `policy`, `classifier`, `prompt`).
-
-
-
 - `src/rag/models.py`  
   Modelli di dominio del retrieval, es. `Evidence`.
 - `src/rag/ollama_io.py`  
@@ -159,6 +156,63 @@ Lo smoke benchmark applicativo (`apps/run_benchmark_smoke.py`) è stato esteso c
 - summary sintetico con quick checks, segnali architetturali per-case e aggregati temporali.
 
 Il runner (`src/benchmark/runner.py`) emette eventi `case_start` e `case_done`, comprensivi di timing per-case e metadati utili al benchmarking architetturale.
+
+### 4.3.b.1 Suite benchmark versionate ed esecuzione selettiva
+Il benchmark applicativo usa suite versionate in `config/`, ad esempio:
+- `config/benchmark_prompts_v3_exact.json` per la suite finale di confronto;
+- eventuali suite core/extra o versioni precedenti per regression e diagnostica.
+
+L'esecuzione può avvenire:
+- sull'intera suite;
+- su sottoinsiemi selezionati tramite `BENCHMARK_CASE_IDS`;
+- in modalità non interrompente tramite `BENCHMARK_FAIL_FAST=false`.
+
+Questa impostazione consente:
+- regression controllate;
+- isolamento rapido dei failure mode;
+- comparabilità tra run successivi.
+
+### 4.3.b.2 Metadati diagnostici della query embedding-based
+Per ciascun caso benchmark vengono ora esposti anche metadati di osservabilità relativi alla query usata dai moduli embedding-based:
+- `query_len_original`
+- `query_len_embedded`
+- `query_was_truncated`
+- `retrieval_query_strategy`
+- preview della query embedding-based
+
+Questi segnali permettono di distinguere:
+- limiti del prompt originale;
+- normalizzazione della query;
+- problemi di retrieval;
+- problemi successivi di sintesi o reasoning.
+
+### 4.3.b.3 Export documentale dei risultati benchmark
+I risultati finali del benchmark possono essere esportati in formato documentale, anche come appendice tecnica, a partire dai file:
+- `debug_dump/final_benchmark_iiaa_summary.json`
+- `debug_dump/final_benchmark_iiaa_results.jsonl`
+
+L'obiettivo è supportare:
+- auditabilità del project work;
+- discussione metodologica in tesi;
+- confronto strutturato con i benchmark dei chatbot generalisti.
+
+### 4.3.c Query normalization per moduli embedding-based
+Per prompt molto lunghi (es. case study numerici), il sistema distingue tra:
+- query completa, mantenuta per il prompting finale verso il modello generativo;
+- embedding query compattata, usata dai moduli embedding-based.
+
+La query compattata è costruita in modo conservativo a partire da:
+- titolo del caso o della domanda;
+- standard target rilevati;
+- topic axes / intent axes, se disponibili;
+- richiesta finale sintetica.
+
+Questa query ridotta viene riusata in modo coerente da:
+- semantic router;
+- retrieval embeddings.
+- I metadati della query compattata vengono propagati anche al benchmark finale, così da rendere osservabile il rapporto tra prompt completo, query embedding-based e comportamento del sistema sui casi lunghi o numerico-applicativi.
+
+La finalità è evitare errori di context length sull'endpoint embeddings, mantenendo al contempo adeguata focalizzazione semantica del retrieval.
 
 ### 4.4 Livello ingestion PDF / deterministic
 - `src/ingestion/hashing.py`  
@@ -425,4 +479,3 @@ curl -s http://localhost:6333/collections
 curl -s http://localhost:11434/api/tags
 
 streamlit run apps/PW_projectwork_ui_streamlit.py
-
