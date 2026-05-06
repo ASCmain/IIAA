@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: "IIAA — International Intelligence Accounting Assistant"
+message: "If you use this repository, please cite it as a software/research prototype."
+type: software
+authors:
+  - name: "ASCmain"
+repository-code: "https://github.com/ASCmain/IIAA"
+license: "Apache-2.0"
+version: "v0.3.6"
+date-released: 2026-05-07
+abstract: >
+  Local-first grounded AI prototype for IAS/IFRS-oriented documentary support,
+  benchmarked against general-purpose generative AI systems in an academic and
+  professional accounting context.
+keywords:
+  - IAS
+  - IFRS
+  - grounded AI
+  - RAG
+  - accounting
+  - audit
+  - benchmark

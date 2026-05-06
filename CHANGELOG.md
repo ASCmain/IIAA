@@ -108,3 +108,10 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 - Added Apache License 2.0 to the repository.
 - Added NOTICE file for project attribution.
 - Updated README with licensing and attribution guidance for public publication.
+
+## [Unreleased]
+### Added
+- Added `CITATION.cff` for repository citation metadata.
+
+### Changed
+- Reworked `README.md` to clarify project scope, architecture, setup notes, limitations, and publication posture.
