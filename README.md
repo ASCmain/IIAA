@@ -1,4 +1,4 @@
-# IIAA — International Intelligence Accounting Assistant
+# IIAA — International Intelligent Accounting Assistant
 
 IIAA is a local-first grounded AI prototype designed to support professional analysis of IAS/IFRS topics through verifiable documentary evidence.
 
