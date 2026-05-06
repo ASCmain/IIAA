@@ -102,3 +102,9 @@ Append-only. Ogni modifica che impatta file/struttura/comportamento deve essere 
 - allineamento definitivo della suite benchmark `benchmark_prompts_v3_exact.json`;
 - rifiniture finali di query planning, source policy, prompting e focus detection per il benchmark conclusivo.
 
+
+## [Unreleased]
+### Added
+- Added Apache License 2.0 to the repository.
+- Added NOTICE file for project attribution.
+- Updated README with licensing and attribution guidance for public publication.
