@@ -2,7 +2,7 @@
 
 ## 1. Scopo del sistema
 
-IIAA (International Intelligence Accounting Assistant) è un assistente RAG locale orientato a principi contabili internazionali IAS/IFRS, con focus professionale su contesto CFO, audit e consulenza contabile.  
+IIAA (International Intelligent Accounting Assistant) è un assistente RAG locale orientato a principi contabili internazionali IAS/IFRS, con focus professionale su contesto CFO, audit e consulenza contabile.  
 L’obiettivo del sistema non è sostituire il professionista, ma fornire risposte grounded, tracciabili e verificabili su base documentale.
 
 Il sistema è sviluppato localmente su Mac Apple Silicon, con pipeline incrementale, corpus governato, retrieval citabile e interfaccia tecnica/user-friendly.
